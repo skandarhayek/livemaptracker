@@ -52,13 +52,11 @@ async function fetchKMLandAppend() {
     }
 
     const existingTimes = new Set(history.map((p) => p.time));
-    console.log(existingTimes);
     const uniquePoints = points.filter(
       (p) => !existingTimes.has(p.properties.timestamp)
     );
     if (uniquePoints.length > 0) {
       const simplifiedPoints = uniquePoints.map((p) => {
-        console.log(p);
         return {
           time: p.properties.timestamp,
           lat: p.geometry.coordinates[1],

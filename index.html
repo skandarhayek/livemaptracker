@@ -60,7 +60,6 @@
         .then((history) => {
           const latestPoint = history[history.length - 1];
           history.forEach((point) => {
-            console.log(point);
             const date = new Date(point["time"]);
             const formattedDate = date.toLocaleDateString("en-GB");
             const popupContent = `
@@ -95,19 +94,11 @@
         "#FF3369" // Rose
       ];
 
-      fetch("gpx/")
-        .then((response) => response.text())
-        .then((data) => {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(data, "text/html");
-          const links = Array.from(doc.querySelectorAll("a"));
-
-          const gpxFiles = links
-            .map((link) => link.href)
-            .filter((href) => href.endsWith(".gpx"))
-            .map((href) => href.split("/").pop());
-
+      fetch("gpx-files.json?" + new Date().getTime())
+        .then((response) => response.json())
+        .then((gpxFiles) => {
           gpxFiles.forEach((file, index) => {
+            console.log(file, index);
             const color =
               file === "cdt.gpx"
                 ? "#3357FF"
@@ -118,7 +109,7 @@
                 null,
                 L.geoJson(null, {
                   filter: function (feature) {
-                    return feature.geometry.type !== "Point"; // Filter out waypoints
+                    return feature.geometry.type !== "Point";
                   }
                 })
               )
