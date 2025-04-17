@@ -12,17 +12,34 @@
       #map {
         height: 100vh;
         width: 100vw;
+        margin: -8px;
       }
-    </style>
-    <style>
       .leaflet-marker-icon {
         background-color: transparent;
         border: none;
         box-shadow: none;
       }
-
       .leaflet-div-icon {
         background-color: transparent !important;
+      }
+      .legend {
+        padding: 6px 8px;
+        font: 14px Arial, Helvetica, sans-serif;
+        background: white;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        border-radius: 5px;
+      }
+      .legend h4 {
+        margin: 0 0 5px;
+        color: #777;
+      }
+      .legend i {
+        width: 18px;
+        height: 3px;
+        float: left;
+        margin: 8px 8px 0 0;
+        opacity: 0.7;
       }
     </style>
   </head>
@@ -93,9 +110,38 @@
         "#FF3369" // Rose
       ];
 
+      function formatTrackName(filename) {
+        return filename
+          .replace(".gpx", "")
+          .split("-")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
+      }
+
       fetch("gpx-files.json?" + new Date().getTime())
         .then((response) => response.json())
         .then((gpxFiles) => {
+          const legend = L.control({ position: "bottomright" });
+
+          legend.onAdd = function (map) {
+            const div = L.DomUtil.create("div", "legend");
+            div.innerHTML = "<h4>Tracks</h4>";
+
+            gpxFiles.forEach((file, index) => {
+              const color =
+                file === "cdt.gpx"
+                  ? "#3357FF"
+                  : trackColors[index % trackColors.length];
+              const name = formatTrackName(file);
+              div.innerHTML += `<i style="background: ${color}"></i>${name}<br>`;
+            });
+
+            return div;
+          };
+
+          legend.addTo(map);
+
+          console.log(legend);
           gpxFiles.forEach((file, index) => {
             const color =
               file === "cdt.gpx"
