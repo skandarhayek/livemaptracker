@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CDT Tracker</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; width: 100vw; }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
+
+<script>
+  // Create map
+  const map = L.map('map').setView([39, -106.5], 6); // Zoomed roughly to CDT
+
+  // Add OpenStreetMap tile layer
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Load live MapShare KML
+  const mapshareUrl = 'https://share.garmin.com/feed/share/3M37F';
+
+  // Load the KML feed
+  const liveTrack = omnivore.kml(mapshareUrl)
+    .on('ready', function () {
+      map.fitBounds(liveTrack.getBounds());
+    })
+    .addTo(map);
+
+  // (Optional) Load CDT GPX/KML
+  const cdtUrl = 'feed.kml';
+  omnivore.kml(cdtUrl).addTo(map);
+</script>
+</body>
+</html>
