@@ -80,12 +80,12 @@
             const date = new Date(point["time"]);
             const formattedDate = date.toLocaleDateString("en-GB");
             const popupContent = `
-              <b>Time:</b> ${formattedDate} ${date.toLocaleTimeString()}<br>
-              <b>Latitude:</b> ${point.lat.toFixed(6)}<br>
-              <b>Longitude:</b> ${point.lon.toFixed(6)}<br>
-              <b>Elevation:</b> ${point.elev || "N/A"}<br>
-              <b>Velocity:</b> ${point.velo || "N/A"}
-            `;
+                    <b>Time:</b> ${formattedDate} ${date.toLocaleTimeString()}<br>
+                    <b>Latitude:</b> ${point.lat.toFixed(6)}<br>
+                    <b>Longitude:</b> ${point.lon.toFixed(6)}<br>
+                    <b>Elevation:</b> ${point.elev || "N/A"}<br>
+                    <b>Velocity:</b> ${point.velo || "N/A"}
+                  `;
 
             const icon = point === latestPoint ? latestIcon : olderIcon;
 
@@ -141,7 +141,6 @@
 
           legend.addTo(map);
 
-          console.log(legend);
           gpxFiles.forEach((file, index) => {
             const color =
               file === "cdt.gpx"
