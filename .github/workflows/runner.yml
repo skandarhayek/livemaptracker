@@ -1,1 +1,32 @@
-*/5 * * * * /usr/bin/node ../../../fetch-latest-point.js
+name: Fetch Garmin Location
+
+on:
+  schedule:
+    - cron: "*/5 * * * *" # every 5 minutes
+  workflow_dispatch: # allows manual triggering via GitHub UI
+
+jobs:
+  fetch-kml:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run fetch-latest-point script
+        run: node fetch-latest-point.js
+
+      - name: Commit and push history update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add history.json
+          git commit -m "Add new tracking point [skip ci]" || echo "No changes to commit"
+          git push
