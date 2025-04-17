@@ -1,2 +1,0 @@
-cron:
-  - "*/5 * * * * /usr/bin/node ./fetch-latest-point.js"
