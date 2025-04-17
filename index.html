@@ -98,7 +98,6 @@
         .then((response) => response.json())
         .then((gpxFiles) => {
           gpxFiles.forEach((file, index) => {
-            console.log(file, index);
             const color =
               file === "cdt.gpx"
                 ? "#3357FF"
