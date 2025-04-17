@@ -1,0 +1,26 @@
+{
+  "name": "livemaptracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "fetch-latest-point.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skandarhayek/livemaptracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/skandarhayek/livemaptracker/issues"
+  },
+  "homepage": "https://github.com/skandarhayek/livemaptracker#readme",
+  "dependencies": {
+    "@tmcw/togeojson": "^7.1.0",
+    "node-fetch": "^3.3.2",
+    "xmldom": "^0.6.0"
+  }
+}
