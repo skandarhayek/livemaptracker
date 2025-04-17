@@ -4,7 +4,7 @@ import { kml as toGeoJSON } from "@tmcw/togeojson";
 import fs from "fs";
 
 const KML_URL = "https://share.garmin.com/feed/share/3M37F";
-const HISTORY_FILE = "./public/history.json"; // adjust as needed
+const HISTORY_FILE = "./history.json";
 
 async function fetchKMLandAppend() {
   const kmlText = await fetch(KML_URL).then((res) => res.text());
