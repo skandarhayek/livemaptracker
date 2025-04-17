@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CDT Tracker</title>
+  <title>CDT Live Tracker</title>
   <meta charset="utf-8" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
@@ -11,31 +11,49 @@
 <body>
 <div id="map"></div>
 
+<!-- Leaflet core -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Leaflet plugin to load KML/GPX/GeoJSON -->
 <script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
 
 <script>
-  // Create map
-  const map = L.map('map').setView([39, -106.5], 6); // Zoomed roughly to CDT
+  // Initialize map
+  const map = L.map('map').setView([39, -106.5], 6); // Central Rockies
 
-  // Add OpenStreetMap tile layer
+  // OpenStreetMap base layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map);
 
-  // Load live MapShare KML
-  const mapshareUrl = 'https://share.garmin.com/feed/share/3M37F';
+  // --- LIVE MapShare feed (replace with actual username) ---
+  const mapshareUrl = 'https://share.garmin.com/Feed/Share/HerUsername'; // ← change this
 
-  // Load the KML feed
   const liveTrack = omnivore.kml(mapshareUrl)
     .on('ready', function () {
       map.fitBounds(liveTrack.getBounds());
+
+      // Highlight breadcrumb trail lines
+      liveTrack.eachLayer(function(layer) {
+        if (layer instanceof L.Polyline) {
+          layer.setStyle({
+            color: 'blue',
+            weight: 3,
+            opacity: 0.8
+          });
+        }
+      });
     })
     .addTo(map);
 
-  // (Optional) Load CDT GPX/KML
-  const cdtUrl = 'feed.kml';
-  omnivore.kml(cdtUrl).addTo(map);
+  // Optional: CDT trail from local file (same directory)
+  omnivore.kml('feed.kml', null, L.geoJson(null, {
+    style: {
+      color: 'green',
+      weight: 2,
+      opacity: 0.9
+    }
+  })).addTo(map);
 </script>
 </body>
 </html>
