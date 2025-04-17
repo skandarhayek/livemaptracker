@@ -36,7 +36,6 @@
             const latlng = [coords[1], coords[0]];
             const date = new Date(props["timestamp"]);
             const popupContent = `
-              <b>${props["name"] || "Track Point"}</b><br>
               <b>Time:</b> ${date.toLocaleDateString()} ${date.toLocaleTimeString()}<br>
               <b>Latitude:</b> ${latlng[0].toFixed(6)}<br>
               <b>Longitude:</b> ${latlng[1].toFixed(6)}<br>

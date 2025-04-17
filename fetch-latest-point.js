@@ -68,7 +68,6 @@ async function fetchKMLandAppend() {
             coordinates: p.geometry.coordinates
           },
           properties: {
-            name: p.properties.Name,
             timestamp: p.properties.timestamp,
             latitude: p.geometry.coordinates[1],
             longitude: p.geometry.coordinates[0],
