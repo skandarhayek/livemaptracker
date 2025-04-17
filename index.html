@@ -41,7 +41,7 @@
 
       const latestIcon = L.divIcon({
         className: "leaflet-div-icon",
-        html: '<i class="fas fa-map-marker-alt" style="color: orange; font-size: 24px;"></i>', // FontAwesome icon
+        html: '<i class="fas fa-map-marker-alt" style="color: orange; font-size: 24px;"></i>',
         iconSize: [24, 24],
         iconAnchor: [12, 24],
         popupAnchor: [0, -24]
@@ -82,7 +82,57 @@
           L.polyline(polyline, { color: "orange" }).addTo(map);
         });
 
-      omnivore.gpx("cdt.gpx").addTo(map);
+      const trackColors = [
+        "#FF5733", // Orange-red
+        "#33FF57", // Lime green
+        "#3357FF", // Blue
+        "#FF33F6", // Pink
+        "#33FFF6", // Cyan
+        "#F6FF33", // Yellow
+        "#9933FF", // Purple
+        "#FF8C33", // Light orange
+        "#33FFB8", // Turquoise
+        "#FF3369" // Rose
+      ];
+
+      fetch("gpx/")
+        .then((response) => response.text())
+        .then((data) => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(data, "text/html");
+          const links = Array.from(doc.querySelectorAll("a"));
+
+          const gpxFiles = links
+            .map((link) => link.href)
+            .filter((href) => href.endsWith(".gpx"))
+            .map((href) => href.split("/").pop());
+
+          gpxFiles.forEach((file, index) => {
+            const color =
+              file === "cdt.gpx"
+                ? "#3357FF"
+                : trackColors[index % trackColors.length];
+            omnivore
+              .gpx(
+                `gpx/${file}`,
+                null,
+                L.geoJson(null, {
+                  filter: function (feature) {
+                    return feature.geometry.type !== "Point"; // Filter out waypoints
+                  }
+                })
+              )
+              .on("ready", function () {
+                this.setStyle({
+                  color: color,
+                  weight: 3,
+                  opacity: 0.7
+                });
+              })
+              .addTo(map);
+          });
+        })
+        .catch((error) => console.error("Error loading GPX files:", error));
     </script>
   </body>
 </html>
