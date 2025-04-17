@@ -2,6 +2,11 @@ import fetch from "node-fetch";
 import { DOMParser } from "xmldom";
 import { kml as toGeoJSON } from "@tmcw/togeojson";
 import fs from "fs";
+import dotenv from "dotenv";
+
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 
 const KML_URL = "https://share.garmin.com/feed/share/3M37F";
 const HISTORY_FILE = "./history.json";
@@ -10,7 +15,10 @@ async function fetchKMLandAppend() {
   const res = await fetch(KML_URL, {
     headers: {
       Authorization:
-        "Basic " + Buffer.from(`CDT2025:A2n6n6a2`).toString("base64")
+        "Basic " +
+        Buffer.from(
+          `${process.env.GARMIN_USER}:${process.env.GARMIN_PASS}`
+        ).toString("base64")
     }
   });
 

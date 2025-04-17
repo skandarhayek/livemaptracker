@@ -29,6 +29,9 @@ jobs:
         run: npm install
 
       - name: Run fetch-latest-point script
+        env:
+          GARMIN_USER: ${{ secrets.GARMIN_USER }}
+          GARMIN_PASS: ${{ secrets.GARMIN_PASS }}
         run: node fetch-latest-point.js
 
       - name: Update GPX files list
