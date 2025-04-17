@@ -1,58 +1,149 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>CDT Live Tracker</title>
-  <meta charset="utf-8" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
-    #map { height: 100vh; width: 100vw; }
-  </style>
-</head>
-<body>
-<div id="map"></div>
+  <head>
+    <title>CDT Live Tracker</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+      #map {
+        height: 100vh;
+        width: 100vw;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
 
-<!-- Leaflet core -->
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Leaflet core -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<!-- Leaflet plugin to load KML/GPX/GeoJSON -->
-<script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
+    <!-- Leaflet plugin to load KML/GPX/GeoJSON -->
+    <script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
 
-<script>
-  // Initialize map
-  const map = L.map('map').setView([39, -106.5], 6); // Central Rockies
+    <script>
+      // Initialize map
+      const map = L.map("map").setView([39, -106.5], 6); // Central Rockies
 
-  // OpenStreetMap base layer
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
-  
-  const mapshareUrl = 'https://share.garmin.com/feed/share/3M37F'; 
+      // OpenStreetMap base layer
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(map);
 
-  const liveTrack = omnivore.kml(mapshareUrl)
-    .on('ready', function () {
-      map.fitBounds(liveTrack.getBounds());
+      // Garmin MapShare feed (proxied to avoid CORS)
+      // const mapshareUrl =
+      //   "https://corsproxy.io/?https://share.garmin.com/feed/share/3M37F";
 
-      // Highlight breadcrumb trail lines
-      liveTrack.eachLayer(function(layer) {
-        if (layer instanceof L.Polyline) {
-          layer.setStyle({
-            color: 'blue',
-            weight: 3,
-            opacity: 0.8
+      // Load Garmin live track with breadcrumb trail
+      // const liveTrack = omnivore
+      //   .kml(mapshareUrl)
+      //   .on("ready", function () {
+      //     const bounds = liveTrack.getBounds();
+      //     if (bounds.isValid && bounds.isValid()) {
+      //       map.fitBounds(bounds);
+      //     } else {
+      //       console.warn("Live track has no valid bounds.");
+      //       map.setView([39, -106.5], 6); // fallback
+      //     }
+
+      //     console.log("GeoJSON:", JSON.stringify(liveTrack.toGeoJSON()));
+      //     console.log("Layers:", liveTrack.getLayers()); // this should now show real layers
+
+      //     liveTrack.eachLayer(function (layer) {
+      //       console.log("Layer type:", layer);
+
+      //       if (layer instanceof L.Polyline) {
+      //         console.log("Found a Polyline!");
+      //         layer.setStyle({
+      //           color: "blue",
+      //           weight: 3,
+      //           opacity: 0.8
+      //         });
+      //       } else if (layer instanceof L.Marker) {
+      //         console.log("Found a Marker!");
+      //         const props = layer.feature && layer.feature.properties;
+      //         const info = `
+      //     <b>${props.name || "Track Point"}</b><br>
+      //     <b>Time:</b> ${props["Time"] || "N/A"}<br>
+      //     <b>Latitude:</b> ${layer.getLatLng().lat.toFixed(6)}<br>
+      //     <b>Longitude:</b> ${layer.getLatLng().lng.toFixed(6)}<br>
+      //     <b>Elevation:</b> ${props["Elevation"] || "N/A"}
+      //   `;
+      //         layer.bindPopup(info);
+      //       } else {
+      //         console.log("Unknown layer:", layer);
+      //       }
+      //     });
+      //   })
+      //   .addTo(map);
+
+      // Optional: CDT trail from local file (same directory)
+      // omnivore
+      //   .kml(
+      //     "feed.kml",
+      //     null,
+      //     L.geoJson(null, {
+      //       style: {
+      //         color: "green",
+      //         weight: 2,
+      //         opacity: 0.9
+      //       },
+      //       onEachFeature: function (feature, layer) {
+      //         if (feature.geometry.type === "Point") {
+      //           const props = feature.properties || {};
+      //           const coords = layer.getLatLng();
+
+      //           const timeString = props["Time"] || "";
+      //           let formattedTime = "N/A";
+      //           if (timeString) {
+      //             const date = new Date(timeString);
+      //             const day = String(date.getDate()).padStart(2, "0");
+      //             const month = String(date.getMonth() + 1).padStart(2, "0");
+      //             const year = date.getFullYear();
+      //             const timeLocal = date.toLocaleTimeString();
+      //             formattedTime = `${day}/${month}/${year} ${timeLocal}`;
+      //           }
+
+      //           const popupContent = `
+      //       <b>${props["Name"] || "Track Point"}</b><br>
+      //       <b>Time:</b> ${formattedTime}<br>
+      //       <b>Latitude:</b> ${coords.lat.toFixed(6)}<br>
+      //       <b>Longitude:</b> ${coords.lng.toFixed(6)}<br>
+      //       <b>Elevation:</b> ${props["Elevation"] || "N/A"}
+      //     `;
+
+      //           layer.bindPopup(popupContent);
+      //         }
+      //       }
+      //     })
+      //   )
+      //   .addTo(map);
+      fetch("history.json")
+        .then((res) => res.json())
+        .then((history) => {
+          history.forEach((point) => {
+            const coords = point.geometry.coordinates;
+            const props = point.properties;
+
+            const latlng = [coords[1], coords[0]];
+            const date = new Date(props["Time"]);
+            const popupContent = `
+        <b>${props["Name"] || "Track Point"}</b><br>
+        <b>Time:</b> ${date.toLocaleDateString()} ${date.toLocaleTimeString()}<br>
+        <b>Latitude:</b> ${latlng[0].toFixed(6)}<br>
+        <b>Longitude:</b> ${latlng[1].toFixed(6)}<br>
+        <b>Elevation:</b> ${props["Elevation"] || "N/A"}
+      `;
+
+            L.marker(latlng).addTo(map).bindPopup(popupContent);
           });
-        }
-      });
-    })
-    .addTo(map);
 
-  // Optional: CDT trail from local file (same directory)
-  omnivore.kml('feed.kml', null, L.geoJson(null, {
-    style: {
-      color: 'green',
-      weight: 2,
-      opacity: 0.9
-    }
-  })).addTo(map);
-</script>
-</body>
+          // Optionally connect points with a polyline
+          const polyline = history.map((f) => [
+            f.geometry.coordinates[1],
+            f.geometry.coordinates[0]
+          ]);
+          L.polyline(polyline, { color: "blue" }).addTo(map);
+        });
+    </script>
+  </body>
 </html>
