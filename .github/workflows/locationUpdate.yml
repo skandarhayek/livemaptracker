@@ -4,14 +4,25 @@ on:
   schedule:
     - cron: "*/1 * * * *"
 
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   trigger:
     runs-on: ubuntu-latest
     steps:
+      - name: Create GitHub App token
+        id: create-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Trigger update workflow
         run: |
           curl -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ steps.create-token.outputs.token }}" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/${{ github.repository }}/dispatches \
             -d '{"event_type":"update_location"}'

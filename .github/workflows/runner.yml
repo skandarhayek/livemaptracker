@@ -1,8 +1,6 @@
 name: Fetch Garmin Location
 
 on:
-  schedule:
-    - cron: "*/1 * * * *"
   repository_dispatch:
     types: [update_location]
   workflow_dispatch:
@@ -13,6 +11,9 @@ permissions:
 jobs:
   fetch-kml:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
