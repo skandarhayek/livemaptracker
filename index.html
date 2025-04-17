@@ -25,9 +25,8 @@
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map);
-
-  // --- LIVE MapShare feed (replace with actual username) ---
-  const mapshareUrl = 'https://share.garmin.com/Feed/Share/HerUsername'; // ← change this
+  
+  const mapshareUrl = 'https://share.garmin.com/feed/share/3M37F'; 
 
   const liveTrack = omnivore.kml(mapshareUrl)
     .on('ready', function () {
