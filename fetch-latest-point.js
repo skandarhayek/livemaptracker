@@ -51,31 +51,22 @@ async function fetchKMLandAppend() {
       }
     }
 
-    const existingCoords = new Set(
-      history.map((p) => p.geometry.coordinates.join(","))
-    );
-
+    const existingTimes = new Set(history.map((p) => p.time));
+    console.log(existingTimes);
     const uniquePoints = points.filter(
-      (p) => !existingCoords.has(p.geometry.coordinates.join(","))
+      (p) => !existingTimes.has(p.properties.timestamp)
     );
-
     if (uniquePoints.length > 0) {
       const simplifiedPoints = uniquePoints.map((p) => {
+        console.log(p);
         return {
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: p.geometry.coordinates
-          },
-          properties: {
-            timestamp: p.properties.timestamp,
-            latitude: p.geometry.coordinates[1],
-            longitude: p.geometry.coordinates[0],
-            elevation: p.properties.Elevation
-              ? parseFloat(p.properties.Elevation)
-              : null,
-            velocity: p.properties.Velocity || "N/A"
-          }
+          time: p.properties.timestamp,
+          lat: p.geometry.coordinates[1],
+          lon: p.geometry.coordinates[0],
+          elev: p.properties.Elevation
+            ? parseFloat(p.properties.Elevation)
+            : null,
+          velo: p.properties.Velocity || "N/A"
         };
       });
       const updated = [...history, ...simplifiedPoints];

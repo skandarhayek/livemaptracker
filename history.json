@@ -1,21 +1,23 @@
 [
   {
-    "type": "Feature",
-    "geometry": {
-      "type": "Point",
-      "coordinates": [
-        -108.714458,
-        32.34007,
-        1315.49
-      ]
-    },
-    "properties": {
-      "name": "Anna Müller-Nielsen",
-      "timestamp": "2025-04-17T11:32:15Z",
-      "latitude": 32.34007,
-      "longitude": -108.714458,
-      "elevation": 1315.49,
-      "velocity": "0.0 km/h"
-    }
+    "time": "2025-04-17T04:32:15Z",
+    "lat": 32.253423,
+    "lon": -108.742353,
+    "elev": 1315.49,
+    "velo": "0.0 km/h"
+  },
+  {
+    "time": "2025-04-17T05:32:15Z",
+    "lat": 32.279076,
+    "lon": -108.736131,
+    "elev": 1315.49,
+    "velo": "0.0 km/h"
+  },
+  {
+    "time": "2025-04-17T11:32:15Z",
+    "lat": 32.34007,
+    "lon": -108.714458,
+    "elev": 1315.49,
+    "velo": "0.0 km/h"
   }
 ]

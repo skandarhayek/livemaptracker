@@ -4,10 +4,25 @@
     <title>CDT Live Tracker</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      rel="stylesheet"
+    />
     <style>
       #map {
         height: 100vh;
         width: 100vw;
+      }
+    </style>
+    <style>
+      .leaflet-marker-icon {
+        background-color: transparent;
+        border: none;
+        box-shadow: none;
+      }
+
+      .leaflet-div-icon {
+        background-color: transparent !important;
       }
     </style>
   </head>
@@ -15,43 +30,59 @@
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
     <script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
 
     <script>
-      const map = L.map("map").setView([39, -106.5], 6); // Central Rockies
+      const map = L.map("map").setView([39, -106.5], 6);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "&copy; OpenStreetMap contributors"
       }).addTo(map);
 
-      fetch("history.json")
+      const latestIcon = L.divIcon({
+        className: "leaflet-div-icon",
+        html: '<i class="fas fa-map-marker-alt" style="color: orange; font-size: 24px;"></i>', // FontAwesome icon
+        iconSize: [24, 24],
+        iconAnchor: [12, 24],
+        popupAnchor: [0, -24]
+      });
+
+      const olderIcon = L.divIcon({
+        className: "leaflet-div-icon",
+        html: '<i class="fas fa-map-marker-alt" style="color: gray; font-size: 18px;"></i>',
+        iconSize: [18, 18],
+        iconAnchor: [9, 18],
+        popupAnchor: [0, -18]
+      });
+
+      fetch("history.json?" + new Date().getTime())
         .then((res) => res.json())
         .then((history) => {
+          const latestPoint = history[history.length - 1];
           history.forEach((point) => {
             console.log(point);
-            const coords = point.geometry.coordinates;
-            const props = point.properties;
-
-            const latlng = [coords[1], coords[0]];
-            const date = new Date(props["timestamp"]);
+            const date = new Date(point["time"]);
+            const formattedDate = date.toLocaleDateString("en-GB");
             const popupContent = `
-              <b>Time:</b> ${date.toLocaleDateString()} ${date.toLocaleTimeString()}<br>
-              <b>Latitude:</b> ${latlng[0].toFixed(6)}<br>
-              <b>Longitude:</b> ${latlng[1].toFixed(6)}<br>
-              <b>Elevation:</b> ${props["elevation"] || "N/A"}<br>
-              <b>Velocity:</b> ${props["velocity"] || "N/A"}
+              <b>Time:</b> ${formattedDate} ${date.toLocaleTimeString()}<br>
+              <b>Latitude:</b> ${point.lat.toFixed(6)}<br>
+              <b>Longitude:</b> ${point.lon.toFixed(6)}<br>
+              <b>Elevation:</b> ${point.elev || "N/A"}<br>
+              <b>Velocity:</b> ${point.velo || "N/A"}
             `;
 
-            L.marker(latlng).addTo(map).bindPopup(popupContent);
+            const icon = point === latestPoint ? latestIcon : olderIcon;
+
+            L.marker([point.lat, point.lon], { icon: icon })
+              .addTo(map)
+              .bindPopup(popupContent);
           });
 
-          const polyline = history.map((f) => [
-            f.geometry.coordinates[1],
-            f.geometry.coordinates[0]
-          ]);
-          L.polyline(polyline, { color: "blue" }).addTo(map);
+          const polyline = history.map((f) => [f.lat, f.lon]);
+          L.polyline(polyline, { color: "orange" }).addTo(map);
         });
+
+      omnivore.gpx("cdt.gpx").addTo(map);
     </script>
   </body>
 </html>
