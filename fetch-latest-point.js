@@ -1,19 +1,17 @@
-const fs = require("fs");
-const https = require("https");
-const { DOMParser } = require("xmldom");
-const toGeoJSON = require("@tmcw/togeojson");
-const fetch = require("node-fetch");
+import fetch from "node-fetch";
+import { DOMParser } from "xmldom";
+import { kml as toGeoJSON } from "@tmcw/togeojson";
+import fs from "fs";
 
 const KML_URL = "https://share.garmin.com/feed/share/3M37F";
 const HISTORY_FILE = "./public/history.json"; // adjust as needed
 
 async function fetchKMLandAppend() {
-  const res = await fetch(KML_URL);
-  const kmlText = await res.text();
+  const kmlText = await fetch(KML_URL).then((res) => res.text());
 
   const parser = new DOMParser();
   const kmlDom = parser.parseFromString(kmlText, "text/xml");
-  const geojson = toGeoJSON.kml(kmlDom);
+  const geojson = toGeoJSON(kmlDom);
 
   const points = geojson.features.filter((f) => f.geometry.type === "Point");
 
