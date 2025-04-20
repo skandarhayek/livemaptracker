@@ -3,6 +3,10 @@
   <head>
     <title>CDT Live Tracker</title>
     <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
@@ -103,281 +107,110 @@
       .mt-fill {
         background-color: #33fff6;
       }
+
+      @media (max-width: 768px) {
+        .leaflet-marker-icon.fas {
+          font-size: 32px !important;
+        }
+
+        .leaflet-div-icon div {
+          width: 12px !important;
+          height: 12px !important;
+          border-width: 3px !important;
+        }
+
+        .legend {
+          font-size: 16px !important;
+        }
+
+        .legend h4 {
+          font-size: 18px !important;
+        }
+
+        #progress-container {
+          width: calc(100% - 40px);
+          font-size: 16px;
+          margin: 10px;
+          left: 0;
+        }
+
+        #progress-bar {
+          height: 18px;
+        }
+
+        .state-progress {
+          margin-top: 12px;
+          font-size: 14px;
+        }
+
+        .state-bar {
+          height: 14px;
+        }
+
+        .leaflet-popup-content {
+          font-size: 16px !important;
+          line-height: 1.5 !important;
+        }
+      }
+
+      .mobile-toggle {
+        display: none;
+        position: absolute;
+        bottom: 20px;
+        width: 40px;
+        height: 40px;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        cursor: pointer;
+        font-size: 20px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #555;
+      }
+
+      #progress-toggle {
+        left: 10px;
+      }
+
+      #legend-toggle {
+        right: 10px;
+      }
+
+      @media (max-width: 768px) {
+        .mobile-toggle {
+          display: flex;
+        }
+
+        #progress-container {
+          display: none;
+          width: calc(100% - 40px);
+          max-height: 60vh;
+          overflow-y: auto;
+        }
+
+        #progress-container.visible {
+          display: block;
+        }
+
+        .legend {
+          display: none;
+          max-height: 60vh;
+          overflow-y: auto;
+        }
+
+        .legend.visible {
+          display: block;
+        }
+      }
     </style>
   </head>
   <body>
     <div id="map"></div>
-
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
-
-    <script>
-      const map = L.map("map").setView([39, -106.5], 6);
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors"
-      }).addTo(map);
-
-      const STATE_BORDERS = {
-        NM_CO: 37.0,
-        CO_WY: 41.0,
-        WY_MT: 45.0
-      };
-
-      function getStateSegments(trkpts) {
-        const segments = {
-          NM: [],
-          CO: [],
-          WY: [],
-          MT: []
-        };
-
-        trkpts.forEach((pt, idx) => {
-          const lat = pt[0];
-          if (lat < STATE_BORDERS.NM_CO) {
-            segments.NM.push(idx);
-          } else if (lat < STATE_BORDERS.CO_WY) {
-            segments.CO.push(idx);
-          } else if (lat < STATE_BORDERS.WY_MT) {
-            segments.WY.push(idx);
-          } else {
-            segments.MT.push(idx);
-          }
-        });
-
-        return segments;
-      }
-
-      function calculateStateProgress(
-        stateSegments,
-        trkpts,
-        cumulativeDistances,
-        closestIndex
-      ) {
-        const progress = {};
-
-        for (const [state, indices] of Object.entries(stateSegments)) {
-          if (indices.length === 0) continue;
-
-          const stateStart = indices[0];
-          const stateEnd = indices[indices.length - 1];
-          const stateDistance =
-            cumulativeDistances[stateEnd] - cumulativeDistances[stateStart];
-
-          let stateProgress = 0;
-          if (closestIndex >= stateEnd) {
-            stateProgress = 100;
-          } else if (closestIndex >= stateStart) {
-            const completedDistance =
-              cumulativeDistances[closestIndex] -
-              cumulativeDistances[stateStart];
-            stateProgress = (completedDistance / stateDistance) * 100;
-          }
-
-          progress[state] = stateProgress;
-        }
-
-        return progress;
-      }
-
-      const latestIcon = L.divIcon({
-        className: "leaflet-div-icon",
-        html: '<i class="fas fa-map-marker-alt" style="color: orange; font-size: 24px;"></i>',
-        iconSize: [24, 24],
-        iconAnchor: [12, 24],
-        popupAnchor: [0, -24]
-      });
-
-      const olderIcon = L.divIcon({
-        className: "leaflet-div-icon",
-        html: '<i class="fas fa-map-marker-alt" style="color: gray; font-size: 18px;"></i>',
-        iconSize: [18, 18],
-        iconAnchor: [9, 18],
-        popupAnchor: [0, -18]
-      });
-
-      fetch("history.json?" + new Date().getTime())
-        .then((res) => res.json())
-        .then((history) => {
-          const latestPoint = history[history.length - 1];
-
-          fetch("gpx-files.json?" + new Date().getTime())
-            .then((res) => res.json())
-            .then((gpxFiles) => {
-              const cdtFile = gpxFiles.find((f) => f.includes("cdt.gpx"));
-              if (!cdtFile) return;
-
-              fetch("gpx/" + cdtFile)
-                .then((res) => res.text())
-                .then((gpxText) => {
-                  const gpxParser = new DOMParser();
-                  const gpxDoc = gpxParser.parseFromString(
-                    gpxText,
-                    "application/xml"
-                  );
-                  const trkpts = Array.from(
-                    gpxDoc.querySelectorAll("trkpt")
-                  ).map((pt) => [
-                    parseFloat(pt.getAttribute("lat")),
-                    parseFloat(pt.getAttribute("lon"))
-                  ]);
-
-                  function haversine(coord1, coord2) {
-                    const R = 6371000;
-                    const toRad = (x) => (x * Math.PI) / 180;
-                    const dLat = toRad(coord2[0] - coord1[0]);
-                    const dLon = toRad(coord2[1] - coord1[1]);
-                    const lat1 = toRad(coord1[0]);
-                    const lat2 = toRad(coord2[0]);
-
-                    const a =
-                      Math.sin(dLat / 2) ** 2 +
-                      Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
-                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                    return R * c;
-                  }
-
-                  const cumulativeDistances = [0];
-                  for (let i = 1; i < trkpts.length; i++) {
-                    const dist = haversine(trkpts[i - 1], trkpts[i]);
-                    cumulativeDistances.push(cumulativeDistances[i - 1] + dist);
-                  }
-
-                  let minDist = Infinity;
-                  let closestIndex = 0;
-                  trkpts.forEach((pt, i) => {
-                    const d = haversine(pt, [latestPoint.lat, latestPoint.lon]);
-                    if (d < minDist) {
-                      minDist = d;
-                      closestIndex = i;
-                    }
-                  });
-
-                  const percentComplete =
-                    (cumulativeDistances[closestIndex] /
-                      cumulativeDistances[cumulativeDistances.length - 1]) *
-                    100;
-
-                  // Update overall progress
-                  document.getElementById("progress-percent").textContent =
-                    percentComplete.toFixed(2) + "%";
-                  document.getElementById("progress-fill").style.width =
-                    percentComplete + "%";
-
-                  // Calculate and display state progress
-                  const stateSegments = getStateSegments(trkpts);
-                  const stateProgress = calculateStateProgress(
-                    stateSegments,
-                    trkpts,
-                    cumulativeDistances,
-                    closestIndex
-                  );
-
-                  // Update state progress bars
-                  for (const [state, progress] of Object.entries(
-                    stateProgress
-                  )) {
-                    const stateCode = state.toLowerCase();
-                    document.getElementById(
-                      `${stateCode}-percent`
-                    ).textContent = progress.toFixed(2) + "%";
-                    document.getElementById(`${stateCode}-fill`).style.width =
-                      progress + "%";
-                  }
-                });
-            });
-
-          history.forEach((point) => {
-            const date = new Date(point["time"]);
-            const formattedDate = date.toLocaleDateString("en-GB");
-            const popupContent = `
-              <b>Time:</b> ${formattedDate} ${date.toLocaleTimeString()}<br>
-              <b>Latitude:</b> ${point.lat.toFixed(6)}<br>
-              <b>Longitude:</b> ${point.lon.toFixed(6)}<br>
-              <b>Elevation:</b> ${point.elev || "N/A"}<br>
-              <b>Velocity:</b> ${point.velo || "N/A"}
-            `;
-
-            const icon = point === latestPoint ? latestIcon : olderIcon;
-            L.marker([point.lat, point.lon], { icon: icon })
-              .addTo(map)
-              .bindPopup(popupContent);
-          });
-
-          const polyline = history.map((f) => [f.lat, f.lon]);
-          L.polyline(polyline, { color: "orange" }).addTo(map);
-        });
-
-      const trackColors = [
-        "#FF5733", // Orange-red
-        "#33FF57", // Lime green
-        "#FF33F6", // Pink
-        "#33FFF6", // Cyan
-        "#F6FF33", // Yellow
-        "#9933FF", // Purple
-        "#FF8C33", // Light orange
-        "#33FFB8", // Turquoise
-        "#FF3369" // Rose
-      ];
-
-      function formatTrackName(filename) {
-        return filename
-          .replace(".gpx", "")
-          .split("-")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ");
-      }
-
-      fetch("gpx-files.json?" + new Date().getTime())
-        .then((response) => response.json())
-        .then((gpxFiles) => {
-          const legend = L.control({ position: "bottomright" });
-
-          legend.onAdd = function (map) {
-            const div = L.DomUtil.create("div", "legend");
-            div.innerHTML = "<h4>Tracks</h4>";
-
-            gpxFiles.forEach((file, index) => {
-              const color =
-                file === "cdt.gpx"
-                  ? "#3357FF"
-                  : trackColors[index % trackColors.length];
-              const name = formatTrackName(file);
-              div.innerHTML += `<i style="background: ${color}"></i>${name}<br>`;
-            });
-
-            return div;
-          };
-
-          legend.addTo(map);
-
-          gpxFiles.forEach((file, index) => {
-            const color =
-              file === "cdt.gpx"
-                ? "#3357FF"
-                : trackColors[index % trackColors.length];
-            omnivore
-              .gpx(
-                `gpx/${file}`,
-                null,
-                L.geoJson(null, {
-                  filter: function (feature) {
-                    return feature.geometry.type !== "Point";
-                  }
-                })
-              )
-              .on("ready", function () {
-                this.setStyle({
-                  color: color,
-                  weight: 3,
-                  opacity: 0.7
-                });
-              })
-              .addTo(map);
-          });
-        })
-        .catch((error) => console.error("Error loading GPX files:", error));
-    </script>
 
     <div id="progress-container">
       <div>
@@ -427,5 +260,368 @@
         </div>
       </div>
     </div>
+    <button
+      id="progress-toggle"
+      class="mobile-toggle"
+      aria-label="Toggle Progress"
+    >
+      <i class="fas fa-chart-line"></i>
+    </button>
+    <button id="legend-toggle" class="mobile-toggle" aria-label="Toggle Legend">
+      <i class="fas fa-map"></i>
+    </button>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const map = L.map("map").setView([39, -106.5], 6);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const STATE_BORDERS = {
+          NM_CO: 37.0,
+          CO_WY: 41.0,
+          WY_MT: 45.0
+        };
+
+        function getStateSegments(trkpts) {
+          const segments = {
+            NM: [],
+            CO: [],
+            WY: [],
+            MT: []
+          };
+
+          trkpts.forEach((pt, idx) => {
+            const lat = pt[0];
+            if (lat < STATE_BORDERS.NM_CO) {
+              segments.NM.push(idx);
+            } else if (lat < STATE_BORDERS.CO_WY) {
+              segments.CO.push(idx);
+            } else if (lat < STATE_BORDERS.WY_MT) {
+              segments.WY.push(idx);
+            } else {
+              segments.MT.push(idx);
+            }
+          });
+
+          return segments;
+        }
+
+        function calculateStateProgress(
+          stateSegments,
+          trkpts,
+          cumulativeDistances,
+          closestIndex
+        ) {
+          const progress = {};
+
+          for (const [state, indices] of Object.entries(stateSegments)) {
+            if (indices.length === 0) continue;
+
+            const stateStart = indices[0];
+            const stateEnd = indices[indices.length - 1];
+            const stateDistance =
+              cumulativeDistances[stateEnd] - cumulativeDistances[stateStart];
+
+            let stateProgress = 0;
+            if (closestIndex >= stateEnd) {
+              stateProgress = 100;
+            } else if (closestIndex >= stateStart) {
+              const completedDistance =
+                cumulativeDistances[closestIndex] -
+                cumulativeDistances[stateStart];
+              stateProgress = (completedDistance / stateDistance) * 100;
+            }
+
+            progress[state] = stateProgress;
+          }
+
+          return progress;
+        }
+
+        function getMDTDateString(timestamp) {
+          return new Date(
+            new Date(timestamp).toLocaleString("en-US", {
+              timeZone: "America/Denver"
+            })
+          ).toDateString();
+        }
+
+        fetch("history.json?" + new Date().getTime())
+          .then((res) => res.json())
+          .then((history) => {
+            const latestPoint = history[history.length - 1];
+
+            fetch("gpx-files.json?" + new Date().getTime())
+              .then((res) => res.json())
+              .then((gpxFiles) => {
+                const cdtFile = gpxFiles.find((f) => f.includes("cdt.gpx"));
+                if (!cdtFile) return;
+
+                fetch("gpx/" + cdtFile)
+                  .then((res) => res.text())
+                  .then((gpxText) => {
+                    const gpxParser = new DOMParser();
+                    const gpxDoc = gpxParser.parseFromString(
+                      gpxText,
+                      "application/xml"
+                    );
+                    const trkpts = Array.from(
+                      gpxDoc.querySelectorAll("trkpt")
+                    ).map((pt) => [
+                      parseFloat(pt.getAttribute("lat")),
+                      parseFloat(pt.getAttribute("lon"))
+                    ]);
+
+                    function haversine(coord1, coord2) {
+                      const R = 6371000;
+                      const toRad = (x) => (x * Math.PI) / 180;
+                      const dLat = toRad(coord2[0] - coord1[0]);
+                      const dLon = toRad(coord2[1] - coord1[1]);
+                      const lat1 = toRad(coord1[0]);
+                      const lat2 = toRad(coord2[0]);
+
+                      const a =
+                        Math.sin(dLat / 2) ** 2 +
+                        Math.sin(dLon / 2) ** 2 *
+                          Math.cos(lat1) *
+                          Math.cos(lat2);
+                      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                      return R * c;
+                    }
+
+                    const cumulativeDistances = [0];
+                    for (let i = 1; i < trkpts.length; i++) {
+                      const dist = haversine(trkpts[i - 1], trkpts[i]);
+                      cumulativeDistances.push(
+                        cumulativeDistances[i - 1] + dist
+                      );
+                    }
+
+                    let minDist = Infinity;
+                    let closestIndex = 0;
+                    trkpts.forEach((pt, i) => {
+                      const d = haversine(pt, [
+                        latestPoint.lat,
+                        latestPoint.lon
+                      ]);
+                      if (d < minDist) {
+                        minDist = d;
+                        closestIndex = i;
+                      }
+                    });
+
+                    const percentComplete =
+                      (cumulativeDistances[closestIndex] /
+                        cumulativeDistances[cumulativeDistances.length - 1]) *
+                      100;
+
+                    document.getElementById("progress-percent").textContent =
+                      percentComplete.toFixed(2) + "%";
+                    document.getElementById("progress-fill").style.width =
+                      percentComplete + "%";
+
+                    const stateSegments = getStateSegments(trkpts);
+                    const stateProgress = calculateStateProgress(
+                      stateSegments,
+                      trkpts,
+                      cumulativeDistances,
+                      closestIndex
+                    );
+
+                    for (const [state, progress] of Object.entries(
+                      stateProgress
+                    )) {
+                      const stateCode = state.toLowerCase();
+                      document.getElementById(
+                        `${stateCode}-percent`
+                      ).textContent = progress.toFixed(2) + "%";
+                      document.getElementById(`${stateCode}-fill`).style.width =
+                        progress + "%";
+                    }
+                  });
+              });
+
+            const pointsByDay = history.reduce((groups, point) => {
+              const mdtDateStr = getMDTDateString(point.time);
+              if (!groups[mdtDateStr]) {
+                groups[mdtDateStr] = [];
+              }
+              groups[mdtDateStr].push(point);
+              return groups;
+            }, {});
+
+            Object.entries(pointsByDay).forEach(([mdtDateStr, points]) => {
+              const dayColor = generateDayColor(new Date(mdtDateStr));
+
+              points.forEach((point) => {
+                const localDate = new Date(point.time);
+                const formattedDate = localDate.toLocaleDateString("en-GB");
+                const popupContent = `
+                  <b>Time:</b> ${formattedDate} ${localDate.toLocaleTimeString()}<br>
+                  <b>Latitude:</b> ${point.lat.toFixed(6)}<br>
+                  <b>Longitude:</b> ${point.lon.toFixed(6)}<br>
+                  <b>Elevation:</b> ${point.elev || "N/A"}<br>
+                  <b>Velocity:</b> ${point.velo || "N/A"}
+                `;
+
+                const isLatest = point === latestPoint;
+                const icon = L.divIcon({
+                  className: "leaflet-div-icon",
+                  html: isLatest
+                    ? `<i class="fas fa-map-marker-alt" style="color: orange; font-size: ${
+                        window.innerWidth <= 768 ? "32px" : "24px"
+                      };"></i>`
+                    : `<div style="
+          width: ${window.innerWidth <= 768 ? "12px" : "8px"};
+          height: ${window.innerWidth <= 768 ? "12px" : "8px"};
+          background-color: ${dayColor};
+          border-radius: 50%;
+          border: ${window.innerWidth <= 768 ? "3px" : "2px"} solid white;
+          box-shadow: 0 0 3px rgba(0,0,0,0.3);
+        "></div>`,
+                  iconSize: isLatest ? [32, 32] : [18, 18],
+                  iconAnchor: isLatest ? [16, 32] : [9, 9],
+                  popupAnchor: [0, isLatest ? -32 : -9]
+                });
+
+                L.marker([point.lat, point.lon], { icon })
+                  .addTo(map)
+                  .bindPopup(popupContent);
+              });
+
+              const dayPolyline = points.map((p) => [p.lat, p.lon]);
+              L.polyline(dayPolyline, {
+                color: dayColor,
+                weight: 3,
+                opacity: 0.7
+              }).addTo(map);
+            });
+          });
+
+        const trackColors = [
+          "#FF5733", // Orange-red
+          "#33FF57", // Lime green
+          "#FF33F6", // Pink
+          "#33FFF6", // Cyan
+          "#F6FF33", // Yellow
+          "#9933FF", // Purple
+          "#FF8C33", // Light orange
+          "#33FFB8", // Turquoise
+          "#FF3369" // Rose
+        ];
+
+        function generateDayColor(date) {
+          const dateStr = date.toDateString();
+          let hash = 0;
+          for (let i = 0; i < dateStr.length; i++) {
+            hash = dateStr.charCodeAt(i) + ((hash << 5) - hash);
+          }
+
+          const h = hash % 360;
+          return `hsl(${h}, 70%, 50%)`;
+        }
+
+        function formatTrackName(filename) {
+          return filename
+            .replace(".gpx", "")
+            .split("-")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+        }
+
+        fetch("gpx-files.json?" + new Date().getTime())
+          .then((response) => response.json())
+          .then((gpxFiles) => {
+            const legend = L.control({ position: "bottomright" });
+
+            legend.onAdd = function (map) {
+              const div = L.DomUtil.create("div", "legend");
+              div.innerHTML = "<h4>Tracks</h4>";
+
+              gpxFiles.forEach((file, index) => {
+                const color =
+                  file === "cdt.gpx"
+                    ? "#3357FF"
+                    : trackColors[index % trackColors.length];
+                const name = formatTrackName(file);
+                div.innerHTML += `<i style="background: ${color}"></i>${name}<br>`;
+              });
+
+              L.DomEvent.disableClickPropagation(div);
+              L.DomEvent.disableScrollPropagation(div);
+
+              return div;
+            };
+
+            legend.addTo(map);
+
+            gpxFiles.forEach((file, index) => {
+              const color =
+                file === "cdt.gpx"
+                  ? "#3357FF"
+                  : trackColors[index % trackColors.length];
+              omnivore
+                .gpx(
+                  `gpx/${file}`,
+                  null,
+                  L.geoJson(null, {
+                    filter: function (feature) {
+                      return feature.geometry.type !== "Point";
+                    }
+                  })
+                )
+                .on("ready", function () {
+                  this.setStyle({
+                    color: color,
+                    weight: 3,
+                    opacity: 0.7
+                  });
+                })
+                .addTo(map);
+            });
+          })
+          .catch((error) => console.error("Error loading GPX files:", error));
+
+        if (window.innerWidth <= 768) {
+          const progressToggle = document.getElementById("progress-toggle");
+          const legendToggle = document.getElementById("legend-toggle");
+          const progressContainer =
+            document.getElementById("progress-container");
+          const legendContainer = document.querySelector(".legend");
+
+          if (!progressToggle || !legendToggle || !progressContainer) {
+            console.error("Missing required elements for mobile toggles");
+            return;
+          }
+
+          progressToggle.addEventListener("click", () => {
+            console.log("Progress toggle clicked");
+            progressContainer.classList.toggle("visible");
+            if (progressContainer.classList.contains("visible")) {
+              legendContainer?.classList.remove("visible");
+            }
+          });
+
+          legendToggle.addEventListener("click", () => {
+            console.log("Legend toggle clicked");
+            legendContainer?.classList.toggle("visible");
+            if (legendContainer?.classList.contains("visible")) {
+              progressContainer.classList.remove("visible");
+            }
+          });
+
+          map.addEventListener("click", () => {
+            progressContainer.classList.remove("visible");
+            legendContainer?.classList.remove("visible");
+          });
+        }
+      });
+    </script>
   </body>
 </html>
