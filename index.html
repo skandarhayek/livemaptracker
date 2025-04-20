@@ -39,7 +39,7 @@
         margin: 0 0 5px;
         color: #777;
       }
-      .legend i {
+      .legend-content i {
         width: 18px;
         height: 3px;
         float: left;
@@ -207,12 +207,91 @@
           display: block;
         }
       }
+
+      .minimize-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 24px;
+        height: 24px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: #666;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border-radius: 3px;
+      }
+
+      .minimize-btn:hover {
+        background: rgba(0, 0, 0, 0.1);
+      }
+
+      @media (max-width: 768px) {
+        .mobile-toggle.hidden {
+          display: none;
+        }
+      }
+
+      .mobile-toggle,
+      .minimize-btn {
+        display: none;
+      }
+
+      @media (max-width: 768px) {
+        .mobile-toggle {
+          display: flex;
+          position: absolute;
+          bottom: 20px;
+          width: 40px;
+          height: 40px;
+          background: white;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+          z-index: 1000;
+          cursor: pointer;
+          font-size: 20px;
+          padding: 0;
+          align-items: center;
+          justify-content: center;
+          color: #555;
+        }
+
+        .minimize-btn {
+          display: flex;
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          width: 24px;
+          height: 24px;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          color: #666;
+          font-size: 18px;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          border-radius: 3px;
+        }
+
+        .mobile-toggle.hidden {
+          display: none;
+        }
+      }
     </style>
   </head>
   <body>
     <div id="map"></div>
 
     <div id="progress-container">
+      <button class="minimize-btn" aria-label="Minimize Progress">
+        <i class="fas fa-minus"></i>
+      </button>
       <div>
         Overall Progress: <span id="progress-percent">0%</span>
         <div id="progress-bar">
@@ -482,8 +561,6 @@
           height: ${window.innerWidth <= 768 ? "12px" : "8px"};
           background-color: ${dayColor};
           border-radius: 50%;
-          border: ${window.innerWidth <= 768 ? "3px" : "2px"} solid white;
-          box-shadow: 0 0 3px rgba(0,0,0,0.3);
         "></div>`,
                   iconSize: isLatest ? [32, 32] : [18, 18],
                   iconAnchor: isLatest ? [16, 32] : [9, 9],
@@ -542,7 +619,19 @@
 
             legend.onAdd = function (map) {
               const div = L.DomUtil.create("div", "legend");
-              div.innerHTML = "<h4>Tracks</h4>";
+
+              const contentDiv = document.createElement("div");
+              contentDiv.className = "legend-content";
+
+              const minimizeBtn = document.createElement("button");
+              minimizeBtn.className = "minimize-btn";
+              minimizeBtn.setAttribute("aria-label", "Minimize Legend");
+              minimizeBtn.innerHTML = '<i class="fas fa-minus"></i>';
+              div.appendChild(minimizeBtn);
+
+              const header = document.createElement("h4");
+              header.textContent = "Tracks";
+              contentDiv.appendChild(header);
 
               gpxFiles.forEach((file, index) => {
                 const color =
@@ -550,11 +639,27 @@
                     ? "#3357FF"
                     : trackColors[index % trackColors.length];
                 const name = formatTrackName(file);
-                div.innerHTML += `<i style="background: ${color}"></i>${name}<br>`;
+
+                const entry = document.createElement("div");
+                const colorBar = document.createElement("i");
+                colorBar.style.background = color;
+                entry.appendChild(colorBar);
+                entry.appendChild(document.createTextNode(name));
+                contentDiv.appendChild(entry);
               });
+
+              div.appendChild(contentDiv);
 
               L.DomEvent.disableClickPropagation(div);
               L.DomEvent.disableScrollPropagation(div);
+
+              minimizeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                div.classList.remove("visible");
+                document
+                  .getElementById("legend-toggle")
+                  ?.classList.remove("hidden");
+              });
 
               return div;
             };
@@ -593,32 +698,46 @@
           const legendToggle = document.getElementById("legend-toggle");
           const progressContainer =
             document.getElementById("progress-container");
-          const legendContainer = document.querySelector(".legend");
 
           if (!progressToggle || !legendToggle || !progressContainer) {
             console.error("Missing required elements for mobile toggles");
             return;
           }
 
+          const progressMinBtn =
+            progressContainer.querySelector(".minimize-btn");
+          progressMinBtn?.addEventListener("click", () => {
+            progressContainer.classList.remove("visible");
+            progressToggle.classList.remove("hidden");
+          });
+
           progressToggle.addEventListener("click", () => {
-            console.log("Progress toggle clicked");
             progressContainer.classList.toggle("visible");
+            progressToggle.classList.add("hidden");
+            const legendContainer = document.querySelector(".legend");
             if (progressContainer.classList.contains("visible")) {
               legendContainer?.classList.remove("visible");
+              legendToggle.classList.remove("hidden");
             }
           });
 
           legendToggle.addEventListener("click", () => {
-            console.log("Legend toggle clicked");
-            legendContainer?.classList.toggle("visible");
-            if (legendContainer?.classList.contains("visible")) {
-              progressContainer.classList.remove("visible");
+            const legendContainer = document.querySelector(".legend");
+            if (legendContainer) {
+              legendContainer.classList.toggle("visible");
+              legendToggle.classList.add("hidden");
+              if (legendContainer.classList.contains("visible")) {
+                progressContainer.classList.remove("visible");
+                progressToggle.classList.remove("hidden");
+              }
             }
           });
 
           map.addEventListener("click", () => {
             progressContainer.classList.remove("visible");
-            legendContainer?.classList.remove("visible");
+            document.querySelector(".legend")?.classList.remove("visible");
+            progressToggle.classList.remove("hidden");
+            legendToggle.classList.remove("hidden");
           });
         }
       });
