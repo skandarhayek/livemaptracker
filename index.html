@@ -355,86 +355,41 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
+        const tracksLayer = L.layerGroup();
+        const markersLayer = L.layerGroup();
+        const cdtLayer = L.layerGroup();
+
         const map = L.map("map").setView([39, -106.5], 6);
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: "&copy; OpenStreetMap contributors"
         }).addTo(map);
 
-        const STATE_BORDERS = {
-          NM_CO: 37.0,
-          CO_WY: 41.0,
-          WY_MT: 45.0
-        };
-
-        function getStateSegments(trkpts) {
-          const segments = {
-            NM: [],
-            CO: [],
-            WY: [],
-            MT: []
-          };
-
-          trkpts.forEach((pt, idx) => {
-            const lat = pt[0];
-            if (lat < STATE_BORDERS.NM_CO) {
-              segments.NM.push(idx);
-            } else if (lat < STATE_BORDERS.CO_WY) {
-              segments.CO.push(idx);
-            } else if (lat < STATE_BORDERS.WY_MT) {
-              segments.WY.push(idx);
-            } else {
-              segments.MT.push(idx);
-            }
-          });
-
-          return segments;
-        }
-
-        function calculateStateProgress(
-          stateSegments,
-          trkpts,
-          cumulativeDistances,
-          closestIndex
-        ) {
-          const progress = {};
-
-          for (const [state, indices] of Object.entries(stateSegments)) {
-            if (indices.length === 0) continue;
-
-            const stateStart = indices[0];
-            const stateEnd = indices[indices.length - 1];
-            const stateDistance =
-              cumulativeDistances[stateEnd] - cumulativeDistances[stateStart];
-
-            let stateProgress = 0;
-            if (closestIndex >= stateEnd) {
-              stateProgress = 100;
-            } else if (closestIndex >= stateStart) {
-              const completedDistance =
-                cumulativeDistances[closestIndex] -
-                cumulativeDistances[stateStart];
-              stateProgress = (completedDistance / stateDistance) * 100;
-            }
-
-            progress[state] = stateProgress;
-          }
-
-          return progress;
-        }
-
-        function getMDTDateString(timestamp) {
-          return new Date(
-            new Date(timestamp).toLocaleString("en-US", {
-              timeZone: "America/Denver"
-            })
-          ).toDateString();
-        }
+        tracksLayer.addTo(map);
+        markersLayer.addTo(map);
+        cdtLayer.addTo(map);
 
         fetch("history.json?" + new Date().getTime())
           .then((res) => res.json())
           .then((history) => {
             const latestPoint = history[history.length - 1];
+
+            setTimeout(() => {
+              map.removeLayer(tracksLayer);
+              map.removeLayer(markersLayer);
+              map.removeLayer(cdtLayer);
+
+              map.flyTo([latestPoint.lat, latestPoint.lon], 12, {
+                duration: 2,
+                easeLinearity: 0.25
+              });
+
+              setTimeout(() => {
+                map.addLayer(tracksLayer);
+                map.addLayer(markersLayer);
+                map.addLayer(cdtLayer);
+              }, 2000);
+            }, 1000);
 
             fetch("gpx-files.json?" + new Date().getTime())
               .then((res) => res.json())
@@ -541,7 +496,9 @@
               points.forEach((point) => {
                 const localDate = new Date(point.time);
                 const formattedDate = localDate.toLocaleDateString("en-GB");
+                const dayNumber = getDaysSinceStart(point.time);
                 const popupContent = `
+                  <b>Day ${dayNumber}</b><br>
                   <b>Time:</b> ${formattedDate} ${localDate.toLocaleTimeString()}<br>
                   <b>Latitude:</b> ${point.lat.toFixed(6)}<br>
                   <b>Longitude:</b> ${point.lon.toFixed(6)}<br>
@@ -568,8 +525,8 @@
                 });
 
                 L.marker([point.lat, point.lon], { icon })
-                  .addTo(map)
-                  .bindPopup(popupContent);
+                  .bindPopup(popupContent)
+                  .addTo(markersLayer);
               });
 
               const dayPolyline = points.map((p) => [p.lat, p.lon]);
@@ -577,9 +534,79 @@
                 color: dayColor,
                 weight: 3,
                 opacity: 0.7
-              }).addTo(map);
+              }).addTo(tracksLayer);
             });
           });
+
+        const STATE_BORDERS = {
+          NM_CO: 37.0,
+          CO_WY: 41.0,
+          WY_MT: 45.0
+        };
+
+        function getStateSegments(trkpts) {
+          const segments = {
+            NM: [],
+            CO: [],
+            WY: [],
+            MT: []
+          };
+
+          trkpts.forEach((pt, idx) => {
+            const lat = pt[0];
+            if (lat < STATE_BORDERS.NM_CO) {
+              segments.NM.push(idx);
+            } else if (lat < STATE_BORDERS.CO_WY) {
+              segments.CO.push(idx);
+            } else if (lat < STATE_BORDERS.WY_MT) {
+              segments.WY.push(idx);
+            } else {
+              segments.MT.push(idx);
+            }
+          });
+
+          return segments;
+        }
+
+        function calculateStateProgress(
+          stateSegments,
+          trkpts,
+          cumulativeDistances,
+          closestIndex
+        ) {
+          const progress = {};
+
+          for (const [state, indices] of Object.entries(stateSegments)) {
+            if (indices.length === 0) continue;
+
+            const stateStart = indices[0];
+            const stateEnd = indices[indices.length - 1];
+            const stateDistance =
+              cumulativeDistances[stateEnd] - cumulativeDistances[stateStart];
+
+            let stateProgress = 0;
+            if (closestIndex >= stateEnd) {
+              stateProgress = 100;
+            } else if (closestIndex >= stateStart) {
+              const completedDistance =
+                cumulativeDistances[closestIndex] -
+                cumulativeDistances[stateStart];
+              stateProgress = (completedDistance / stateDistance) * 100;
+            }
+
+            progress[state] = stateProgress;
+          }
+
+          return progress;
+        }
+
+        function getMDTDateString(timestamp) {
+          return new Date(
+            new Date(timestamp).toLocaleString("en-US", {
+              timeZone: "America/Denver"
+            })
+          ).toDateString();
+        }
 
         const trackColors = [
           "#FF5733", // Orange-red
@@ -610,6 +637,14 @@
             .split("-")
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(" ");
+        }
+
+        function getDaysSinceStart(timestamp) {
+          const startDate = new Date("2025-04-13");
+          const pointDate = new Date(timestamp);
+          const diffTime = pointDate - startDate;
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays + 1; // Add 1 to make it 1-based (Day 1 instead of Day 0)
         }
 
         fetch("gpx-files.json?" + new Date().getTime())
@@ -671,6 +706,8 @@
                 file === "cdt.gpx"
                   ? "#3357FF"
                   : trackColors[index % trackColors.length];
+              const targetLayer = file === "cdt.gpx" ? cdtLayer : tracksLayer;
+
               omnivore
                 .gpx(
                   `gpx/${file}`,
@@ -684,11 +721,11 @@
                 .on("ready", function () {
                   this.setStyle({
                     color: color,
-                    weight: 3,
+                    weight: file === "cdt.gpx" ? 2 : 3,
                     opacity: 0.7
                   });
-                })
-                .addTo(map);
+                  targetLayer.addLayer(this);
+                });
             });
           })
           .catch((error) => console.error("Error loading GPX files:", error));
