@@ -41,7 +41,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase 
           git add history.json gpx-files.json public/favicon.ico
+          git stash
+          git pull --rebase
+          git stash pop
           git commit -m "Update tracking point, GPX files list, and favicon [skip ci]" || echo "No changes to commit"
           git push || (git pull --rebase && git push)
