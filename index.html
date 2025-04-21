@@ -379,8 +379,8 @@
               map.removeLayer(markersLayer);
               map.removeLayer(cdtLayer);
 
-              map.flyTo([latestPoint.lat, latestPoint.lon], 12, {
-                duration: 2,
+              map.flyTo([latestPoint.lat, latestPoint.lon], 10, {
+                duration: 1.1,
                 easeLinearity: 0.25
               });
 
@@ -388,8 +388,8 @@
                 map.addLayer(tracksLayer);
                 map.addLayer(markersLayer);
                 map.addLayer(cdtLayer);
-              }, 2000);
-            }, 1000);
+              }, 1100);
+            }, 800);
 
             fetch("gpx-files.json?" + new Date().getTime())
               .then((res) => res.json())
@@ -644,7 +644,7 @@
           const pointDate = new Date(timestamp);
           const diffTime = pointDate - startDate;
           const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          return diffDays + 1; // Add 1 to make it 1-based (Day 1 instead of Day 0)
+          return diffDays + 1;
         }
 
         fetch("gpx-files.json?" + new Date().getTime())
