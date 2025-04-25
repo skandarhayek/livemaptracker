@@ -621,14 +621,27 @@
         ];
 
         function generateDayColor(date) {
-          const dateStr = date.toDateString();
-          let hash = 0;
-          for (let i = 0; i < dateStr.length; i++) {
-            hash = dateStr.charCodeAt(i) + ((hash << 5) - hash);
-          }
+          const baseHues = [
+            0, // Red
+            120, // Green
+            240, // Blue
+            60, // Yellow
+            180, // Cyan
+            300, // Magenta
+            30, // Orange
+            270, // Purple
+            150 // Spring Green
+          ];
 
-          const h = hash % 360;
-          return `hsl(${h}, 70%, 50%)`;
+          const dayNumber = Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
+
+          const hueIndex = dayNumber % baseHues.length;
+          const baseHue = baseHues[hueIndex];
+
+          const saturation = dayNumber % 2 === 0 ? 70 : 85;
+          const lightness = dayNumber % 3 === 0 ? 45 : 60;
+
+          return `hsl(${baseHue}, ${saturation}%, ${lightness}%)`;
         }
 
         function formatTrackName(filename) {
