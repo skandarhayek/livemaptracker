@@ -22,6 +22,7 @@
     "@tmcw/togeojson": "^7.1.0",
     "dotenv": "^16.5.0",
     "node-fetch": "^3.3.2",
+    "xml2js": "^0.6.2",
     "xmldom": "^0.6.0"
   }
 }
