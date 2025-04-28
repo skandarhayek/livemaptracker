@@ -58,7 +58,7 @@
         padding: 6px 12px;
         font-family: Arial, sans-serif;
         font-size: 14px;
-        z-index: 1000;
+        z-index: 10000;
       }
       #progress-bar {
         width: 100%;
@@ -209,9 +209,6 @@
       }
 
       .minimize-btn {
-        position: absolute;
-        top: 8px;
-        right: 8px;
         width: 24px;
         height: 24px;
         background: transparent;
@@ -239,6 +236,23 @@
       .mobile-toggle,
       .minimize-btn {
         display: none;
+      }
+
+      .minimize-btn-flex {
+        display: none;
+        top: 8px;
+        right: 8px;
+        width: 24px;
+        height: 24px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: #666;
+        font-size: 18px;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border-radius: 3px;
       }
 
       @media (max-width: 768px) {
@@ -279,8 +293,159 @@
           border-radius: 3px;
         }
 
+        .minimize-btn-flex {
+          display: flex;
+          top: 8px;
+          right: 8px;
+          width: 24px;
+          height: 24px;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          color: #666;
+          font-size: 18px;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          border-radius: 3px;
+        }
+
         .mobile-toggle.hidden {
           display: none;
+        }
+      }
+
+      #stats-container {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 250px;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        padding: 6px 12px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        z-index: 1000;
+        transform: translateY(0);
+        transition: transform 0.3s ease;
+        z-index: 10000;
+      }
+
+      #stats-container.minimized {
+        transform: translateY(calc(-100% + 40px));
+      }
+
+      #daily-stats {
+        max-height: 300px;
+        overflow-y: auto;
+        transition: max-height 0.3s ease-out;
+      }
+
+      #daily-stats.collapsed {
+        max-height: 0;
+        overflow: hidden;
+      }
+
+      .daily-stat {
+        display: flex;
+        align-items: flex-start;
+        padding: 6px 0;
+        border-bottom: 1px solid #eee;
+      }
+
+      .color-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+        margin-top: 4px;
+        flex-shrink: 0;
+      }
+
+      .stat-details {
+        flex-grow: 1;
+      }
+
+      .stat-date {
+        font-weight: bold;
+        margin-bottom: 2px;
+      }
+
+      .stats-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        position: relative;
+      }
+
+      .header-buttons {
+        right: 0;
+        top: 0;
+        display: flex;
+        gap: 8px;
+      }
+
+      .toggle-stats-btn {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        color: #666;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .toggle-stats-btn i {
+        transition: transform 0.3s ease;
+      }
+
+      .toggle-stats-btn.collapsed i {
+        transform: rotate(-180deg);
+      }
+
+      #stats-toggle {
+        display: none;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        cursor: pointer;
+        font-size: 20px;
+        padding: 0;
+        align-items: center;
+        justify-content: center;
+        color: #555;
+      }
+
+      #stats-toggle.visible {
+        display: flex;
+      }
+
+      @media (max-width: 768px) {
+        #stats-container {
+          display: none;
+          width: calc(100% - 40px);
+          max-height: 60vh;
+          overflow-y: auto;
+        }
+
+        #stats-container.visible {
+          display: block;
+        }
+
+        #stats-toggle {
+          display: flex !important;
         }
       }
     </style>
@@ -350,6 +515,38 @@
       <i class="fas fa-map"></i>
     </button>
 
+    <div id="stats-container">
+      <div id="stats-summary">
+        <div class="stats-header">
+          <div>
+            <div>
+              <strong>Total Distance:</strong>
+              <span id="total-distance">0 km</span>
+            </div>
+            <div>
+              <strong>Total Elevation:</strong>
+              <span id="total-elevation">0 m</span>
+            </div>
+          </div>
+          <div class="header-buttons">
+            <button
+              class="toggle-stats-btn collapsed"
+              aria-label="Toggle Daily Stats"
+            >
+              <i class="fas fa-chevron-down"></i>
+            </button>
+            <button class="minimize-btn-flex" aria-label="Minimize Stats">
+              <i class="fas fa-minus"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="daily-stats" class="collapsed"></div>
+    </div>
+    <button id="stats-toggle" aria-label="Show Stats">
+      <i class="fas fa-chart-bar"></i>
+    </button>
+
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
 
@@ -358,6 +555,21 @@
         const tracksLayer = L.layerGroup();
         const markersLayer = L.layerGroup();
         const cdtLayer = L.layerGroup();
+
+        function haversine(coord1, coord2) {
+          const R = 6371000;
+          const toRad = (x) => (x * Math.PI) / 180;
+          const dLat = toRad(coord2[0] - coord1[0]);
+          const dLon = toRad(coord2[1] - coord1[1]);
+          const lat1 = toRad(coord1[0]);
+          const lat2 = toRad(coord2[0]);
+
+          const a =
+            Math.sin(dLat / 2) ** 2 +
+            Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          return R * c;
+        }
 
         const map = L.map("map").setView([39, -106.5], 6);
 
@@ -411,23 +623,6 @@
                       parseFloat(pt.getAttribute("lat")),
                       parseFloat(pt.getAttribute("lon"))
                     ]);
-
-                    function haversine(coord1, coord2) {
-                      const R = 6371000;
-                      const toRad = (x) => (x * Math.PI) / 180;
-                      const dLat = toRad(coord2[0] - coord1[0]);
-                      const dLon = toRad(coord2[1] - coord1[1]);
-                      const lat1 = toRad(coord1[0]);
-                      const lat2 = toRad(coord2[0]);
-
-                      const a =
-                        Math.sin(dLat / 2) ** 2 +
-                        Math.sin(dLon / 2) ** 2 *
-                          Math.cos(lat1) *
-                          Math.cos(lat2);
-                      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                      return R * c;
-                    }
 
                     const cumulativeDistances = [0];
                     for (let i = 1; i < trkpts.length; i++) {
@@ -490,8 +685,46 @@
               return groups;
             }, {});
 
+            let totalDistance = 0;
+            let totalElevation = 0;
+            const dailyStats = [];
+
             Object.entries(pointsByDay).forEach(([mdtDateStr, points]) => {
               const dayColor = generateDayColor(new Date(mdtDateStr));
+
+              let dailyDistance = 0;
+              let dailyAltitudeGain = 0;
+
+              for (let i = 1; i < points.length; i++) {
+                const prev = points[i - 1];
+                const curr = points[i];
+
+                const distance = haversine(
+                  [prev.lat, prev.lon],
+                  [curr.lat, curr.lon]
+                );
+                dailyDistance += distance;
+
+                if (prev.elev && curr.elev) {
+                  const elevDiff = curr.elev - prev.elev;
+                  if (elevDiff > 0) {
+                    dailyAltitudeGain += elevDiff;
+                  }
+                }
+              }
+
+              const distanceKm = (dailyDistance / 1000).toFixed(2);
+              const altitudeGainM = Math.round(dailyAltitudeGain);
+
+              totalDistance += dailyDistance;
+              totalElevation += dailyAltitudeGain;
+
+              dailyStats.push({
+                date: mdtDateStr,
+                distance: dailyDistance,
+                elevation: dailyAltitudeGain,
+                color: dayColor
+              });
 
               points.forEach((point) => {
                 const localDate = new Date(point.time);
@@ -536,6 +769,31 @@
                 opacity: 0.7
               }).addTo(tracksLayer);
             });
+
+            document.getElementById("total-distance").textContent =
+              (totalDistance / 1000).toFixed(2) + " km";
+            document.getElementById("total-elevation").textContent =
+              Math.round(totalElevation) + " m";
+
+            const dailyStatsContainer = document.getElementById("daily-stats");
+            dailyStats
+              .sort((a, b) => new Date(b.date) - new Date(a.date))
+              .forEach((stat) => {
+                const distanceKm = (stat.distance / 1000).toFixed(2);
+                const elevationM = Math.round(stat.elevation);
+
+                const dayElement = document.createElement("div");
+                dayElement.className = "daily-stat";
+                dayElement.innerHTML = `
+      <div class="color-dot" style="background-color: ${stat.color}"></div>
+      <div class="stat-details">
+        <div class="stat-date">${stat.date}</div>
+        <div>Distance: ${distanceKm} km</div>
+        <div>Elevation Gain: ${elevationM} m</div>
+      </div>
+    `;
+                dailyStatsContainer.appendChild(dayElement);
+              });
           });
 
         const STATE_BORDERS = {
@@ -788,8 +1046,75 @@
             document.querySelector(".legend")?.classList.remove("visible");
             progressToggle.classList.remove("hidden");
             legendToggle.classList.remove("hidden");
+            statsContainer.classList.remove("visible");
+          });
+
+          const statsContainer = document.getElementById("stats-container");
+          const statsMinBtn = statsContainer.querySelector(".minimize-btn");
+
+          statsMinBtn?.addEventListener("click", () => {
+            statsContainer.classList.remove("visible");
+            statsToggle.classList.remove("hidden");
           });
         }
+
+        const toggleStatsBtn = document.querySelector(".toggle-stats-btn");
+        const dailyStatsDiv = document.getElementById("daily-stats");
+
+        toggleStatsBtn?.addEventListener("click", () => {
+          dailyStatsDiv.classList.toggle("collapsed");
+          toggleStatsBtn.classList.toggle("collapsed");
+        });
+
+        const statsContainer = document.getElementById("stats-container");
+        const statsToggle = document.getElementById("stats-toggle");
+        const statsMinBtn = statsContainer.querySelector(".minimize-btn-flex");
+
+        function handleMobileView() {
+          if (window.innerWidth <= 768) {
+            statsContainer.classList.remove("visible");
+            statsToggle.classList.add("visible");
+          } else {
+            statsContainer.classList.add("visible");
+            statsToggle.classList.remove("visible");
+          }
+        }
+
+        handleMobileView();
+
+        window.addEventListener("resize", handleMobileView);
+
+        statsMinBtn?.addEventListener("click", () => {
+          statsContainer.classList.remove("visible");
+          statsToggle.classList.add("visible");
+        });
+
+        statsToggle?.addEventListener("click", () => {
+          statsContainer.classList.add("visible");
+          statsToggle.classList.remove("visible");
+        });
+
+        map.addEventListener("click", () => {
+          if (window.innerWidth <= 768) {
+            statsContainer.classList.remove("visible");
+            statsToggle.classList.add("visible");
+          }
+        });
+
+        statsMinBtn?.addEventListener("click", () => {
+          statsContainer.classList.add("minimized");
+          statsToggle.classList.add("visible");
+        });
+
+        statsToggle?.addEventListener("click", () => {
+          statsContainer.classList.remove("minimized");
+          statsToggle.classList.remove("visible");
+        });
+
+        map.addEventListener("click", () => {
+          statsContainer.classList.add("minimized");
+          statsToggle.classList.add("visible");
+        });
       });
     </script>
   </body>
