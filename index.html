@@ -13,6 +13,10 @@
       rel="stylesheet"
     />
     <link rel="icon" type="image/x-icon" href="public/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
+    />
     <style>
       #map {
         height: 100vh;
@@ -448,6 +452,56 @@
           display: flex !important;
         }
       }
+
+      .leaflet-control-layers {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 5px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      }
+
+      @media (max-width: 768px) {
+        .leaflet-control-layers {
+          font-size: 16px;
+        }
+
+        .leaflet-control-layers-toggle {
+          width: 44px !important;
+          height: 44px !important;
+        }
+      }
+
+      .leaflet-control-geocoder {
+        display: flex;
+        position: fixed !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        /* top: 20px !important; */
+        width: 300px !important;
+        z-index: 1000 !important;
+      }
+
+      .leaflet-control-geocoder-form {
+        width: 100% !important;
+      }
+
+      .leaflet-control-geocoder-form input {
+        width: 100% !important;
+        padding: 10px !important;
+        font-size: 14px !important;
+      }
+
+      .leaflet-control-geocoder-alternatives {
+        background: white !important;
+      }
+
+      @media (max-width: 768px) {
+        .leaflet-control-geocoder {
+          width: calc(100% - 40px) !important;
+          top: 10px !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -549,6 +603,7 @@
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
@@ -571,11 +626,116 @@
           return R * c;
         }
 
-        const map = L.map("map").setView([39, -106.5], 6);
+        const map = L.map("map", {
+          zoomControl: false
+        }).setView([39, -106.5], 6);
 
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "&copy; OpenStreetMap contributors"
+        // Create geocoder control
+        const geocoder = new L.Control.Geocoder({
+          defaultMarkGeocode: false,
+          position: "topright",
+          expand: "click",
+          placeholder: "Search for places or coordinates...",
+          geocoder: L.Control.Geocoder.nominatim({
+            geocodingQueryParams: {
+              countrycodes: "us",
+              viewbox: "-125.0,31.0,-102.0,49.0",
+              bounded: 1
+            }
+          }),
+          collapsed: false
         }).addTo(map);
+
+        // Handle geocoding results
+        geocoder.on("markgeocode", function (e) {
+          const bbox = e.geocode.bbox;
+          const poly = L.polygon([
+            bbox.getSouthEast(),
+            bbox.getNorthEast(),
+            bbox.getNorthWest(),
+            bbox.getSouthWest()
+          ]);
+          map.fitBounds(poly.getBounds());
+
+          const marker = L.marker(e.geocode.center)
+            .addTo(map)
+            .bindPopup(e.geocode.name)
+            .openPopup();
+
+          setTimeout(() => {
+            map.removeLayer(marker);
+          }, 5000);
+        });
+
+        const osmLayer = L.tileLayer(
+          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          {
+            attribution: "&copy; OpenStreetMap contributors"
+          }
+        );
+
+        const topoLayer = L.tileLayer(
+          "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+          {
+            attribution: "&copy; OpenTopoMap contributors",
+            maxZoom: 17
+          }
+        );
+
+        const satelliteLayer = L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          {
+            attribution:
+              "&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+            maxZoom: 18
+          }
+        );
+
+        const streetsOverlay = L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",
+          {
+            attribution: "Tiles &copy; Esri",
+            opacity: 0.7,
+            maxZoom: 18
+          }
+        );
+
+        const labelsOverlay = L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+          {
+            attribution: "Tiles &copy; Esri",
+            opacity: 0.7,
+            maxZoom: 18
+          }
+        );
+
+        const hybridLayer = L.layerGroup([
+          satelliteLayer,
+          streetsOverlay,
+          labelsOverlay
+        ]);
+
+        osmLayer.addTo(map);
+
+        const baseMaps = {
+          Street: osmLayer,
+          Topographic: topoLayer,
+          Satellite: satelliteLayer,
+          Hybrid: hybridLayer
+        };
+
+        const overlayMaps = {
+          Tracks: tracksLayer,
+          Markers: markersLayer,
+          "CDT Route": cdtLayer
+        };
+
+        L.control
+          .layers(baseMaps, overlayMaps, {
+            collapsed: window.innerWidth <= 768,
+            position: "topleft"
+          })
+          .addTo(map);
 
         tracksLayer.addTo(map);
         markersLayer.addTo(map);
