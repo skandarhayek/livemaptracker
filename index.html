@@ -38,6 +38,14 @@
         background: rgba(255, 255, 255, 0.9);
         box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
         border-radius: 5px;
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        bottom: 80px;
+        right: 10px;
+      }
+      .legend.visible {
+        display: block;
       }
       .legend h4 {
         margin: 0 0 5px;
@@ -49,6 +57,12 @@
         float: left;
         margin: 8px 8px 0 0;
         opacity: 0.7;
+      }
+      .leaflet-control.legend {
+        display: none;
+      }
+      .leaflet-control.legend.visible {
+        display: block;
       }
       #progress-container {
         position: absolute;
@@ -123,21 +137,6 @@
           border-width: 3px !important;
         }
 
-        .legend {
-          font-size: 16px !important;
-        }
-
-        .legend h4 {
-          font-size: 18px !important;
-        }
-
-        #progress-container {
-          width: calc(100% - 40px);
-          font-size: 16px;
-          margin: 10px;
-          left: 0;
-        }
-
         #progress-bar {
           height: 18px;
         }
@@ -177,58 +176,123 @@
         color: #555;
       }
 
-      #progress-toggle {
-        left: 10px;
+      #mobile-navbar {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid #ccc;
+        z-index: 10000;
+        box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
       }
 
-      #legend-toggle {
-        right: 10px;
+      #mobile-navbar.visible {
+        display: flex;
+      }
+
+      .nav-icon {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 8px;
+        color: #555;
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+
+      .nav-icon.active {
+        color: #3357ff;
+      }
+
+      .nav-icon i {
+        font-size: 20px;
+        margin-bottom: 4px;
+      }
+
+      .nav-icon span {
+        font-size: 12px;
       }
 
       @media (max-width: 768px) {
-        .mobile-toggle {
+        #mobile-navbar {
           display: flex;
+        }
+
+        .leaflet-control-layers {
+          display: none;
+          position: fixed;
+          z-index: 1000;
+          bottom: 80px;
+          z-index: 1000;
+        }
+
+        .leaflet-control-layers.visible {
+          display: block;
+        }
+
+        .leaflet-control-geocoder {
+          display: none;
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 1000;
+        }
+
+        .leaflet-control-geocoder.visible {
+          display: block;
+          margin: 0;
+          border: none;
+          border-radius: 4px;
+        }
+
+        #stats-container {
+          position: fixed;
+          top: 30px;
+          width: 250px;
+          background: white;
+          border-radius: 6px;
+          padding: 6px 12px;
+          font-family: Arial, sans-serif;
+          font-size: 14px;
+          z-index: 1000;
+          transition: transform 0.3s ease;
+          z-index: 10000;
+        }
+
+        #stats-container.visible {
+          display: block;
         }
 
         #progress-container {
           display: none;
-          width: calc(100% - 40px);
-          max-height: 60vh;
-          overflow-y: auto;
+          z-index: 1000;
         }
 
         #progress-container.visible {
+          width: calc(100% - 45px);
+          bottom: 80px;
           display: block;
+          margin: auto;
         }
 
         .legend {
-          display: none;
-          max-height: 60vh;
-          overflow-y: auto;
+          position: fixed;
+          z-index: 1000;
+          bottom: 50px;
         }
 
         .legend.visible {
           display: block;
         }
-      }
 
-      .minimize-btn {
-        width: 24px;
-        height: 24px;
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        color: #666;
-        font-size: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        border-radius: 3px;
-      }
-
-      .minimize-btn:hover {
-        background: rgba(0, 0, 0, 0.1);
+        .mobile-toggle {
+          display: none;
+        }
       }
 
       @media (max-width: 768px) {
@@ -237,26 +301,8 @@
         }
       }
 
-      .mobile-toggle,
-      .minimize-btn {
+      .mobile-toggle {
         display: none;
-      }
-
-      .minimize-btn-flex {
-        display: none;
-        top: 8px;
-        right: 8px;
-        width: 24px;
-        height: 24px;
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        color: #666;
-        font-size: 18px;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        border-radius: 3px;
       }
 
       @media (max-width: 768px) {
@@ -277,41 +323,6 @@
           align-items: center;
           justify-content: center;
           color: #555;
-        }
-
-        .minimize-btn {
-          display: flex;
-          position: absolute;
-          top: 8px;
-          right: 8px;
-          width: 24px;
-          height: 24px;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          color: #666;
-          font-size: 18px;
-          align-items: center;
-          justify-content: center;
-          padding: 0;
-          border-radius: 3px;
-        }
-
-        .minimize-btn-flex {
-          display: flex;
-          top: 8px;
-          right: 8px;
-          width: 24px;
-          height: 24px;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          color: #666;
-          font-size: 18px;
-          align-items: center;
-          justify-content: center;
-          padding: 0;
-          border-radius: 3px;
         }
 
         .mobile-toggle.hidden {
@@ -457,13 +468,14 @@
         font-family: Arial, sans-serif;
         font-size: 14px;
         background: rgba(255, 255, 255, 0.9);
-        border-radius: 5px;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+        border: none !important;
+        bottom: 60px;
       }
 
       @media (max-width: 768px) {
         .leaflet-control-layers {
-          font-size: 16px;
+          font-size: 12px;
         }
 
         .leaflet-control-layers-toggle {
@@ -477,9 +489,9 @@
         position: fixed !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
-        /* top: 20px !important; */
         width: 300px !important;
         z-index: 1000 !important;
+        height: 32px;
       }
 
       .leaflet-control-geocoder-form {
@@ -507,10 +519,30 @@
   <body>
     <div id="map"></div>
 
+    <div id="mobile-navbar">
+      <div class="nav-icon" data-target="layers">
+        <i class="fas fa-layer-group"></i>
+        <span>Layers</span>
+      </div>
+      <div class="nav-icon" data-target="search">
+        <i class="fas fa-search"></i>
+        <span>Search</span>
+      </div>
+      <div class="nav-icon" data-target="stats">
+        <i class="fas fa-chart-bar"></i>
+        <span>Stats</span>
+      </div>
+      <div class="nav-icon" data-target="progress">
+        <i class="fas fa-chart-line"></i>
+        <span>Progress</span>
+      </div>
+      <div class="nav-icon" data-target="legend">
+        <i class="fas fa-map"></i>
+        <span>Legend</span>
+      </div>
+    </div>
+
     <div id="progress-container">
-      <button class="minimize-btn" aria-label="Minimize Progress">
-        <i class="fas fa-minus"></i>
-      </button>
       <div>
         Overall Progress: <span id="progress-percent">0%</span>
         <div id="progress-bar">
@@ -589,9 +621,6 @@
             >
               <i class="fas fa-chevron-down"></i>
             </button>
-            <button class="minimize-btn-flex" aria-label="Minimize Stats">
-              <i class="fas fa-minus"></i>
-            </button>
           </div>
         </div>
       </div>
@@ -611,21 +640,6 @@
         const markersLayer = L.layerGroup();
         const cdtLayer = L.layerGroup();
 
-        function haversine(coord1, coord2) {
-          const R = 6371000;
-          const toRad = (x) => (x * Math.PI) / 180;
-          const dLat = toRad(coord2[0] - coord1[0]);
-          const dLon = toRad(coord2[1] - coord1[1]);
-          const lat1 = toRad(coord1[0]);
-          const lat2 = toRad(coord2[0]);
-
-          const a =
-            Math.sin(dLat / 2) ** 2 +
-            Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
-          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-          return R * c;
-        }
-
         const map = L.map("map", {
           zoomControl: false
         }).setView([39, -106.5], 6);
@@ -643,29 +657,32 @@
               bounded: 1
             }
           }),
-          collapsed: false
-        }).addTo(map);
-
-        // Handle geocoding results
-        geocoder.on("markgeocode", function (e) {
-          const bbox = e.geocode.bbox;
-          const poly = L.polygon([
-            bbox.getSouthEast(),
-            bbox.getNorthEast(),
-            bbox.getNorthWest(),
-            bbox.getSouthWest()
-          ]);
-          map.fitBounds(poly.getBounds());
-
-          const marker = L.marker(e.geocode.center)
-            .addTo(map)
-            .bindPopup(e.geocode.name)
-            .openPopup();
-
-          setTimeout(() => {
-            map.removeLayer(marker);
-          }, 5000);
+          collapsed: true
         });
+
+        // Add the geocoder to the map but hide it initially
+        geocoder.addTo(map);
+        const geocoderElement = document.querySelector(
+          ".leaflet-control-geocoder"
+        );
+        if (geocoderElement) {
+          geocoderElement.style.display = "none";
+        }
+
+        function haversine(coord1, coord2) {
+          const R = 6371000;
+          const toRad = (x) => (x * Math.PI) / 180;
+          const dLat = toRad(coord2[0] - coord1[0]);
+          const dLon = toRad(coord2[1] - coord1[1]);
+          const lat1 = toRad(coord1[0]);
+          const lat2 = toRad(coord2[0]);
+
+          const a =
+            Math.sin(dLat / 2) ** 2 +
+            Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          return R * c;
+        }
 
         const osmLayer = L.tileLayer(
           "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -730,16 +747,83 @@
           "CDT Route": cdtLayer
         };
 
-        L.control
+        const layersControl = L.control
           .layers(baseMaps, overlayMaps, {
-            collapsed: window.innerWidth <= 768,
+            collapsed: true,
             position: "topleft"
           })
           .addTo(map);
 
-        tracksLayer.addTo(map);
-        markersLayer.addTo(map);
-        cdtLayer.addTo(map);
+        const navbar = document.getElementById("mobile-navbar");
+        const navIcons = navbar.querySelectorAll(".nav-icon");
+        const elements = {
+          layers: document.querySelector(".leaflet-control-layers"),
+          search: document.querySelector(".leaflet-control-geocoder"),
+          stats: document.getElementById("stats-container"),
+          progress: document.getElementById("progress-container"),
+          legend: document.querySelector(".leaflet-control.legend")
+        };
+
+        let activeElement = null;
+
+        navIcons.forEach((icon) => {
+          icon.addEventListener("click", () => {
+            const target = icon.dataset.target;
+
+            if (activeElement === target) {
+              Object.values(elements).forEach((el) => {
+                if (el) {
+                  if (el === elements.layers) {
+                    layersControl.collapse();
+                  } else if (el === elements.search) {
+                    el.style.display = "none";
+                  }
+                  el.classList.remove("visible");
+                }
+              });
+              navIcons.forEach((i) => i.classList.remove("active"));
+              activeElement = null;
+              return;
+            }
+
+            Object.values(elements).forEach((el) => {
+              if (el) {
+                if (el === elements.search) {
+                  el.style.display = "none";
+                } else {
+                  el.classList.remove("visible");
+                }
+              }
+            });
+            navIcons.forEach((i) => i.classList.remove("active"));
+
+            if (elements[target]) {
+              if (target === "layers") {
+                layersControl.expand();
+              } else if (target === "search") {
+                elements.search.style.display = "block";
+              }
+              elements[target].classList.add("visible");
+              icon.classList.add("active");
+              activeElement = target;
+            }
+          });
+        });
+
+        map.on("click", () => {
+          Object.values(elements).forEach((el) => {
+            if (el) {
+              if (el === elements.layers) {
+                layersControl.collapse();
+              } else if (el === elements.search) {
+                el.style.display = "none";
+              }
+              el.classList.remove("visible");
+            }
+          });
+          navIcons.forEach((i) => i.classList.remove("active"));
+          activeElement = null;
+        });
 
         fetch("history.json?" + new Date().getTime())
           .then((res) => res.json())
@@ -954,6 +1038,25 @@
     `;
                 dailyStatsContainer.appendChild(dayElement);
               });
+
+            const toggleStatsBtn = document.querySelector(".toggle-stats-btn");
+            if (toggleStatsBtn) {
+              toggleStatsBtn.addEventListener("click", () => {
+                const isCollapsed =
+                  toggleStatsBtn.classList.contains("collapsed");
+                const dailyStats = document.getElementById("daily-stats");
+
+                if (isCollapsed) {
+                  // Show daily stats
+                  toggleStatsBtn.classList.remove("collapsed");
+                  dailyStats.classList.remove("collapsed");
+                } else {
+                  // Hide daily stats
+                  toggleStatsBtn.classList.add("collapsed");
+                  dailyStats.classList.add("collapsed");
+                }
+              });
+            }
           });
 
         const STATE_BORDERS = {
@@ -1084,16 +1187,10 @@
             const legend = L.control({ position: "bottomright" });
 
             legend.onAdd = function (map) {
-              const div = L.DomUtil.create("div", "legend");
+              const div = L.DomUtil.create("div", "leaflet-control legend");
 
               const contentDiv = document.createElement("div");
               contentDiv.className = "legend-content";
-
-              const minimizeBtn = document.createElement("button");
-              minimizeBtn.className = "minimize-btn";
-              minimizeBtn.setAttribute("aria-label", "Minimize Legend");
-              minimizeBtn.innerHTML = '<i class="fas fa-minus"></i>';
-              div.appendChild(minimizeBtn);
 
               const header = document.createElement("h4");
               header.textContent = "Tracks";
@@ -1119,18 +1216,82 @@
               L.DomEvent.disableClickPropagation(div);
               L.DomEvent.disableScrollPropagation(div);
 
-              minimizeBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                div.classList.remove("visible");
-                document
-                  .getElementById("legend-toggle")
-                  ?.classList.remove("hidden");
-              });
-
               return div;
             };
 
             legend.addTo(map);
+
+            const navbar = document.getElementById("mobile-navbar");
+            const navIcons = navbar.querySelectorAll(".nav-icon");
+            const elements = {
+              layers: document.querySelector(".leaflet-control-layers"),
+              search: document.querySelector(".leaflet-control-geocoder"),
+              stats: document.getElementById("stats-container"),
+              progress: document.getElementById("progress-container"),
+              legend: document.querySelector(".leaflet-control.legend")
+            };
+
+            let activeElement = null;
+
+            navIcons.forEach((icon) => {
+              icon.addEventListener("click", () => {
+                const target = icon.dataset.target;
+
+                if (activeElement === target) {
+                  Object.values(elements).forEach((el) => {
+                    if (el) {
+                      if (el === elements.layers) {
+                        layersControl.collapse();
+                      } else if (el === elements.search) {
+                        el.style.display = "none";
+                      }
+                      el.classList.remove("visible");
+                    }
+                  });
+                  navIcons.forEach((i) => i.classList.remove("active"));
+                  activeElement = null;
+                  return;
+                }
+
+                Object.values(elements).forEach((el) => {
+                  if (el) {
+                    if (el === elements.search) {
+                      el.style.display = "none";
+                    } else {
+                      el.classList.remove("visible");
+                    }
+                  }
+                });
+                navIcons.forEach((i) => i.classList.remove("active"));
+
+                if (elements[target]) {
+                  if (target === "layers") {
+                    // Expand the layers control
+                    layersControl.expand();
+                  } else if (target === "search") {
+                    elements.search.style.display = "flex";
+                  }
+                  elements[target].classList.add("visible");
+                  icon.classList.add("active");
+                  activeElement = target;
+                }
+              });
+            });
+
+            map.on("click", () => {
+              Object.values(elements).forEach((el) => {
+                if (el) {
+                  if (el === elements.layers) {
+                    layersControl.collapse();
+                  } else if (el === elements.search) {
+                    el.style.display = "none";
+                  }
+                  el.classList.remove("visible");
+                }
+              });
+              navIcons.forEach((i) => i.classList.remove("active"));
+              activeElement = null;
+            });
 
             gpxFiles.forEach((file, index) => {
               const color =
@@ -1161,119 +1322,31 @@
           })
           .catch((error) => console.error("Error loading GPX files:", error));
 
-        if (window.innerWidth <= 768) {
-          const progressToggle = document.getElementById("progress-toggle");
-          const legendToggle = document.getElementById("legend-toggle");
-          const progressContainer =
-            document.getElementById("progress-container");
-
-          if (!progressToggle || !legendToggle || !progressContainer) {
-            console.error("Missing required elements for mobile toggles");
-            return;
-          }
-
-          const progressMinBtn =
-            progressContainer.querySelector(".minimize-btn");
-          progressMinBtn?.addEventListener("click", () => {
-            progressContainer.classList.remove("visible");
-            progressToggle.classList.remove("hidden");
-          });
-
-          progressToggle.addEventListener("click", () => {
-            progressContainer.classList.toggle("visible");
-            progressToggle.classList.add("hidden");
-            const legendContainer = document.querySelector(".legend");
-            if (progressContainer.classList.contains("visible")) {
-              legendContainer?.classList.remove("visible");
-              legendToggle.classList.remove("hidden");
-            }
-          });
-
-          legendToggle.addEventListener("click", () => {
-            const legendContainer = document.querySelector(".legend");
-            if (legendContainer) {
-              legendContainer.classList.toggle("visible");
-              legendToggle.classList.add("hidden");
-              if (legendContainer.classList.contains("visible")) {
-                progressContainer.classList.remove("visible");
-                progressToggle.classList.remove("hidden");
-              }
-            }
-          });
-
-          map.addEventListener("click", () => {
-            progressContainer.classList.remove("visible");
-            document.querySelector(".legend")?.classList.remove("visible");
-            progressToggle.classList.remove("hidden");
-            legendToggle.classList.remove("hidden");
-            statsContainer.classList.remove("visible");
-          });
-
-          const statsContainer = document.getElementById("stats-container");
-          const statsMinBtn = statsContainer.querySelector(".minimize-btn");
-
-          statsMinBtn?.addEventListener("click", () => {
-            statsContainer.classList.remove("visible");
-            statsToggle.classList.remove("hidden");
-          });
-        }
-
-        const toggleStatsBtn = document.querySelector(".toggle-stats-btn");
-        const dailyStatsDiv = document.getElementById("daily-stats");
-
-        toggleStatsBtn?.addEventListener("click", () => {
-          dailyStatsDiv.classList.toggle("collapsed");
-          toggleStatsBtn.classList.toggle("collapsed");
-        });
-
-        const statsContainer = document.getElementById("stats-container");
+        const progressToggle = document.getElementById("progress-toggle");
+        const legendToggle = document.getElementById("legend-toggle");
         const statsToggle = document.getElementById("stats-toggle");
-        const statsMinBtn = statsContainer.querySelector(".minimize-btn-flex");
+        if (progressToggle) progressToggle.remove();
+        if (legendToggle) legendToggle.remove();
+        if (statsToggle) statsToggle.remove();
 
-        function handleMobileView() {
-          if (window.innerWidth <= 768) {
-            statsContainer.classList.remove("visible");
-            statsToggle.classList.add("visible");
-          } else {
-            statsContainer.classList.add("visible");
-            statsToggle.classList.remove("visible");
-          }
-        }
+        geocoder.on("markgeocode", function (e) {
+          const bbox = e.geocode.bbox;
+          const poly = L.polygon([
+            bbox.getSouthEast(),
+            bbox.getNorthEast(),
+            bbox.getNorthWest(),
+            bbox.getSouthWest()
+          ]);
+          map.fitBounds(poly.getBounds());
 
-        handleMobileView();
+          const marker = L.marker(e.geocode.center)
+            .addTo(map)
+            .bindPopup(e.geocode.name)
+            .openPopup();
 
-        window.addEventListener("resize", handleMobileView);
-
-        statsMinBtn?.addEventListener("click", () => {
-          statsContainer.classList.remove("visible");
-          statsToggle.classList.add("visible");
-        });
-
-        statsToggle?.addEventListener("click", () => {
-          statsContainer.classList.add("visible");
-          statsToggle.classList.remove("visible");
-        });
-
-        map.addEventListener("click", () => {
-          if (window.innerWidth <= 768) {
-            statsContainer.classList.remove("visible");
-            statsToggle.classList.add("visible");
-          }
-        });
-
-        statsMinBtn?.addEventListener("click", () => {
-          statsContainer.classList.add("minimized");
-          statsToggle.classList.add("visible");
-        });
-
-        statsToggle?.addEventListener("click", () => {
-          statsContainer.classList.remove("minimized");
-          statsToggle.classList.remove("visible");
-        });
-
-        map.addEventListener("click", () => {
-          statsContainer.classList.add("minimized");
-          statsToggle.classList.add("visible");
+          setTimeout(() => {
+            map.removeLayer(marker);
+          }, 5000);
         });
       });
     </script>
