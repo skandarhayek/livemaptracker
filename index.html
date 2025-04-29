@@ -33,19 +33,14 @@
       }
       .legend {
         padding: 6px 8px;
-        font: 14px Arial, Helvetica, sans-serif;
         background: white;
-        background: rgba(255, 255, 255, 0.9);
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-        border-radius: 5px;
-        display: none;
-        position: fixed;
+        border-radius: 4px;
         z-index: 1000;
-        bottom: 80px;
-        right: 10px;
-      }
-      .legend.visible {
         display: block;
+        margin-bottom: -12px !important;
+        margin-right: 5px !important;
+        bottom: 18px;
+        background: white;
       }
       .legend h4 {
         margin: 0 0 5px;
@@ -58,21 +53,14 @@
         margin: 8px 8px 0 0;
         opacity: 0.7;
       }
-      .leaflet-control.legend {
-        display: none;
-      }
-      .leaflet-control.legend.visible {
-        display: block;
-      }
       #progress-container {
         position: absolute;
         bottom: 10px;
         left: 10px;
         width: 250px;
         background: white;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        border: none;
+        border-radius: 4px;
         padding: 6px 12px;
         font-family: Arial, sans-serif;
         font-size: 14px;
@@ -275,19 +263,9 @@
 
         #progress-container.visible {
           width: calc(100% - 45px);
-          bottom: 80px;
+          bottom: 60px;
           display: block;
           margin: auto;
-        }
-
-        .legend {
-          position: fixed;
-          z-index: 1000;
-          bottom: 50px;
-        }
-
-        .legend.visible {
-          display: block;
         }
 
         .mobile-toggle {
@@ -336,9 +314,8 @@
         right: 10px;
         width: 250px;
         background: white;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        border: none;
+        border-radius: 4px;
         padding: 6px 12px;
         font-family: Arial, sans-serif;
         font-size: 14px;
@@ -470,12 +447,17 @@
         background: rgba(255, 255, 255, 0.9);
         border-radius: 4px;
         border: none !important;
-        bottom: 60px;
       }
 
       @media (max-width: 768px) {
         .leaflet-control-layers {
           font-size: 12px;
+          display: none;
+          bottom: 60px;
+        }
+
+        .leaflet-control-layers.visible {
+          display: block;
         }
 
         .leaflet-control-layers-toggle {
@@ -492,26 +474,54 @@
         width: 300px !important;
         z-index: 1000 !important;
         height: 32px;
+        border: none !important;
+        flex-wrap: wrap;
       }
 
       .leaflet-control-geocoder-form {
-        width: 100% !important;
+        display: inherit;
+        vertical-align: middle;
+        margin: auto 0;
+        flex: 1;
       }
 
-      .leaflet-control-geocoder-form input {
-        width: 100% !important;
-        padding: 10px !important;
-        font-size: 14px !important;
+      .leaflet-control-geocoder-form-no-error {
+        flex: 1 0 100%;
+        background: white;
+        text-align: center;
+        padding: 10px 0px;
+        margin: 0px;
       }
 
       .leaflet-control-geocoder-alternatives {
-        background: white !important;
+        width: 100%;
+        background: white;
+      }
+
+      .leaflet-control-geocoder-form input {
+        width: 100%;
       }
 
       @media (max-width: 768px) {
         .leaflet-control-geocoder {
           width: calc(100% - 40px) !important;
           top: 10px !important;
+          display: none;
+        }
+
+        .leaflet-control-geocoder.visible {
+          display: block;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .legend {
+          display: none;
+        }
+
+        .legend.visible {
+          display: block;
+          bottom: 55px;
         }
       }
     </style>
@@ -644,7 +654,6 @@
           zoomControl: false
         }).setView([39, -106.5], 6);
 
-        // Create geocoder control
         const geocoder = new L.Control.Geocoder({
           defaultMarkGeocode: false,
           position: "topright",
@@ -652,7 +661,6 @@
           placeholder: "Search for places or coordinates...",
           geocoder: L.Control.Geocoder.nominatim({
             geocodingQueryParams: {
-              countrycodes: "us",
               viewbox: "-125.0,31.0,-102.0,49.0",
               bounded: 1
             }
@@ -660,13 +668,14 @@
           collapsed: true
         });
 
-        // Add the geocoder to the map but hide it initially
         geocoder.addTo(map);
         const geocoderElement = document.querySelector(
           ".leaflet-control-geocoder"
         );
         if (geocoderElement) {
-          geocoderElement.style.display = "none";
+          if (window.innerWidth <= 768) {
+            geocoderElement.style.display = "none";
+          }
         }
 
         function haversine(coord1, coord2) {
@@ -749,10 +758,14 @@
 
         const layersControl = L.control
           .layers(baseMaps, overlayMaps, {
-            collapsed: true,
+            collapsed: window.innerWidth <= 768,
             position: "topleft"
           })
           .addTo(map);
+
+        if (window.innerWidth > 768) {
+          layersControl.expand();
+        }
 
         const navbar = document.getElementById("mobile-navbar");
         const navIcons = navbar.querySelectorAll(".nav-icon");
@@ -1266,10 +1279,9 @@
 
                 if (elements[target]) {
                   if (target === "layers") {
-                    // Expand the layers control
                     layersControl.expand();
                   } else if (target === "search") {
-                    elements.search.style.display = "flex";
+                    elements.search.style.display = "block";
                   }
                   elements[target].classList.add("visible");
                   icon.classList.add("active");
@@ -1339,14 +1351,16 @@
           ]);
           map.fitBounds(poly.getBounds());
 
-          const marker = L.marker(e.geocode.center)
+          // Remove any existing search marker before adding a new one
+          if (window.searchMarker) {
+            map.removeLayer(window.searchMarker);
+          }
+
+          // Create and store the new marker
+          window.searchMarker = L.marker(e.geocode.center)
             .addTo(map)
             .bindPopup(e.geocode.name)
             .openPopup();
-
-          setTimeout(() => {
-            map.removeLayer(marker);
-          }, 5000);
         });
       });
     </script>
