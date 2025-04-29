@@ -510,7 +510,7 @@
         }
 
         .leaflet-control-geocoder.visible {
-          display: block;
+          display: flex;
         }
       }
 
@@ -629,7 +629,7 @@
               class="toggle-stats-btn collapsed"
               aria-label="Toggle Daily Stats"
             >
-              <i class="fas fa-chevron-down"></i>
+              <i class="fas fa-chevron-up"></i>
             </button>
           </div>
         </div>
@@ -1281,7 +1281,7 @@
                   if (target === "layers") {
                     layersControl.expand();
                   } else if (target === "search") {
-                    elements.search.style.display = "block";
+                    elements.search.style.display = "flex";
                   }
                   elements[target].classList.add("visible");
                   icon.classList.add("active");
