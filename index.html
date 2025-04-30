@@ -54,7 +54,7 @@
         opacity: 0.7;
       }
       #progress-container {
-        position: absolute;
+        position: fixed;
         bottom: 10px;
         left: 10px;
         width: 250px;
@@ -252,10 +252,6 @@
           z-index: 10000;
         }
 
-        #stats-container.visible {
-          display: block;
-        }
-
         #progress-container {
           display: none;
           z-index: 1000;
@@ -309,7 +305,7 @@
       }
 
       #stats-container {
-        position: absolute;
+        position: fixed;
         top: 10px;
         right: 10px;
         width: 250px;
@@ -521,7 +517,9 @@
 
         .legend.visible {
           display: block;
-          bottom: 55px;
+          bottom: 72px;
+          position: fixed;
+          right: 0;
         }
       }
     </style>
